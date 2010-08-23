@@ -19,4 +19,5 @@ $mech->app(
     }
 );
 
-$mech->get_ok(q{/});
+$mech->get('http://localhost/view/mark/76/mark@stosberg.com');
+$mech->title_is('mark@stosberg.com mark 76', 'route with parameters');

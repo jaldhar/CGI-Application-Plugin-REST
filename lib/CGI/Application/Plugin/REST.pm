@@ -76,9 +76,76 @@ sub import {
 }
 
 sub _rest_dispatch {
-    my ( $self, $run_mode ) = @_;
+    my ($self) = @_;
 
-    return;
+    # All this routine, except a few own modifications was borrowed from the
+    # wonderful Michael Peter's CGI::Application::Dispatch module that can be
+    # found here:  http://search.cpan.org/~wonko/CGI-Application-Dispatch/
+
+    my $q    = $self->query;
+    my $path = $q->path_info;
+
+    # get the module name from the table
+    if ( !exists $self->{'__rest_dispatch_table'} ) {
+        croak "no __rest_dispatch table!\n";
+    }
+    my $table = $self->{'__rest_dispatch_table'};
+
+    # look at each rule and stop when we get a match
+    for ( my $i = 0 ; $i < scalar @{$table} ; $i += 2 ) {
+        my $rule  = $table->[$i];
+        my @names = ();
+
+        # translate the rule into a regular expression, but remember where
+        # the named args are.
+        # '/:foo' will become '/([^\/]*)'
+        # and
+        # '/:bar?' will become '/?([^\/]*)?'
+        # and then remember which position it matches
+        $rule =~ s{
+                        (^|/)                 # beginning or a /
+                        (:([^/\?]+)(\?)?)     # stuff in between
+                }{
+                        push(@names, $3);
+                        $1 . ($4 ? '?([^/]*)?' : '([^/]*)')
+                }gxe;
+
+        # '/*/' will become '/(.*)/$' the end / is added to the end of
+        # both $rule and $path elsewhere
+        if ( $rule =~ m{/\*/$} ) {
+            $rule =~ s{/\*/$}{/(.*)/\$};
+            push @names, 'dispatch_url_remainder';
+        }
+
+        # if we found a match, then run with it
+        if ( my @values = ( $path =~ m{^$rule$} ) ) {
+            $self->{'__match'} = $path;
+
+            #$self->routes_params(@names);
+            my %named_args;
+            $self->param( 'rm', $table->[ ++$i ] );
+
+            @named_args{@names} = @values if @names;
+
+            # force params into $self->query. NOTE that it will overwrite
+            # any existing param with the same name
+            foreach my $k ( keys %named_args ) {
+                $q->param( "$k", $named_args{$k} );
+            }
+
+            my $rm_name = $table->[$i];
+            $self->{'__r_params '} = {
+                'parsed_params: ' => \%named_args,
+                'path_received: ' => $path,
+                'rule_matched: '  => $rule,
+                'runmode: '       => $rm_name
+            };
+
+            return $rm_name;
+        }
+    }
+
+    return $self->start_mode;
 }
 
 =head3 rest_route()
@@ -216,11 +283,16 @@ response is set to 400 (See L<"DIAGNOSTICS">.)
 =cut
 
 sub rest_route {
-    my ( $self, @params ) = @_;
+    my ( $self, $table ) = @_;
 
-    # First use?  Create new __rest_dispatch_table.
-    if ( !exists $self->{__rest_dispatch_table} ) {
-        $self->{__rest_dispatch_table} = {};
+    if ( defined $table ) {
+        $self->{'__rest_dispatch_table'} = $table;
+
+        #register every runmode declared.
+        for ( my $i = 1 ; $i < scalar @{$table} ; $i += 2 ) {
+            my $rm_name = $table->[$i];
+            $self->run_modes( [$rm_name] );
+        }
     }
 
     return $self->{_rest_dispatch_table};
