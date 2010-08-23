@@ -295,7 +295,7 @@ sub rest_route {
         }
     }
 
-    return $self->{_rest_dispatch_table};
+    return [ $self->{'_rest_dispatch_table'} ];
 }
 
 =head1 DIAGNOSTICS
