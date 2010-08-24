@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );
-use Test::More tests => 8;
+use Test::More tests => 9;
 use Test::WWW::Mechanize::CGIApp;
 use lib 't/lib';
 use Test::CAPREST;
@@ -34,6 +34,11 @@ eval {
 };
 ok(defined $EVAL_ERROR, 'no dispatch table');
 
+eval {
+    $mech->get('http://localhost/bar/mark/76/mark@stosberg.com?bogusdispatch=1');
+};
+ok(defined $EVAL_ERROR, 'incomplete dispatch table');
+
 $mech->get('http://localhost/bogus/mark/76/mark@stosberg.com');
 $mech->title_is('default', 'non-existent route');
 
@@ -44,4 +49,4 @@ $mech->get('http://localhost/baz/string/evil/');
 $mech->title_is('evil', 'route with a a different wildcard parameter');
 
 $mech->get('http://localhost/quux');
-$mech->title_is('xARRAYx', 'rest_route return value');
+$mech->title_is('5', 'rest_route return value');

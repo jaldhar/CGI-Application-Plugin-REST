@@ -33,13 +33,21 @@ sub setup {
 #        },
 #    );
 
-    if (!defined $self->query->param('nodispatch')) {
-        $self->rest_route([
+    if (defined $self->query->param('bogusdispatch')) {
+        $self->rest_route( '/baz/string/*/' );
+    }
+    elsif (!defined $self->query->param('nodispatch')) {
+        # Remember to change rest_route_return_value test in t/routes.t
+        # when you change number of routes here. (add 1 for default '/'.)
+        my $routes = {
             '/foo'                    => 'foo',
             '/bar/:name/:id?/:email'  => 'bar',
+        };
+        $self->rest_route($routes);
+        $self->rest_route(
             '/baz/string/*/'          => 'baz',
             '/quux'                   => 'quux',
-        ]);
+        );
     }
 
     return;
@@ -89,8 +97,7 @@ sub quux {
 
     my $q = $self->query;
 
-    my $table = $self->rest_route;
-    my $title = 'x' . (ref $table) . 'x';
+    my $title = scalar keys %{ $self->rest_route };
     return $q->start_html($title) .
            $q->end_html;
 }

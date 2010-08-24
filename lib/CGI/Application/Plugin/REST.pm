@@ -89,12 +89,13 @@ sub _rest_dispatch {
     if ( !exists $self->{'__rest_dispatch_table'} ) {
         croak "no __rest_dispatch table!\n";
     }
-    my $table = $self->{'__rest_dispatch_table'};
 
     # look at each rule and stop when we get a match
-    for ( my $i = 0 ; $i < scalar @{$table} ; $i += 2 ) {
-        my $rule  = $table->[$i];
+    foreach my $rule ( keys %{ $self->{'__rest_dispatch_table'} } ) {
         my @names = ();
+
+        # $rule will be transformed later so save the original form first.
+        my $key = $rule;
 
         # translate the rule into a regular expression, but remember where
         # the named args are.
@@ -123,7 +124,6 @@ sub _rest_dispatch {
 
             #$self->routes_params(@names);
             my %named_args;
-            $self->param( 'rm', $table->[ ++$i ] );
 
             @named_args{@names} = @values if @names;
 
@@ -133,7 +133,9 @@ sub _rest_dispatch {
                 $q->param( "$k", $named_args{$k} );
             }
 
-            my $rm_name = $table->[$i];
+            my $rm_name = $self->{'__rest_dispatch_table'}->{$key};
+            $self->param( 'rm', $rm_name );
+
             $self->{'__r_params '} = {
                 'parsed_params: ' => \%named_args,
                 'path_received: ' => $path,
@@ -283,19 +285,37 @@ response is set to 400 (See L<"DIAGNOSTICS">.)
 =cut
 
 sub rest_route {
-    my ( $self, $table ) = @_;
+    my ( $self, @routes ) = @_;
 
-    if ( defined $table ) {
-        $self->{'__rest_dispatch_table'} = $table;
+    if (!exists $self->{'__rest_dispatch_table'}) {
+        $self->{'__rest_dispatch_table'} = { q{/} => 'dump_html' };
+    }
 
-        #register every runmode declared.
-        for ( my $i = 1 ; $i < scalar @{$table} ; $i += 2 ) {
-            my $rm_name = $table->[$i];
-            $self->run_modes( [$rm_name] );
+    my $rr_m = $self->{'__rest_dispatch_table'};
+
+    my $num_routes = scalar @routes;
+    if ( $num_routes ) {
+        if ( ref $routes[0] eq 'HASH' ) {        # Hashref
+            foreach my $route ( keys %{ $routes[0] } ) {
+                $self->run_modes( [ $routes[0]->{$route} ] );
+            }
+            %{ $rr_m } = ( %{ $rr_m }, %{ $routes[0] } );
+        }
+        #elsif ( ref $routes[0] = 'ARRAY' ) {
+        #}
+        elsif ( ( $num_routes % 2 ) == 0 ) { # Hash
+            for ( my $i = 1 ; $i < $num_routes; $i += 2 ) {
+                my $rm_name = $routes[$i];
+                $self->run_modes( [$rm_name] );
+            }
+            %{ $rr_m } = ( %{ $rr_m }, @routes );
+        }
+        else {
+            croak('Odd number of elements passed to rest_route().  Not a valid hash');
         }
     }
 
-    return [ $self->{'_rest_dispatch_table'} ];
+    return $self->{'__rest_dispatch_table'};
 }
 
 =head1 DIAGNOSTICS
