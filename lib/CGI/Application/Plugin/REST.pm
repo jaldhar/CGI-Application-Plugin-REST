@@ -326,12 +326,6 @@ sub rest_route {
         if ( ref $routes[0] eq 'HASH' ) {    # Hashref
             _route_hashref( $self, $routes[0] );
         }
-
-        #elsif ( ref $routes[0] = 'ARRAY' ) {     # Arrayref
-        #    foreach my $run_mode ( @{ $params[0] } ) {
-        #        _route_hashref($self, { $run_mode => $run_mode }, );
-        #    }
-        #}
         elsif ( ( $num_routes % 2 ) == 0 ) {    # Hash
             while ( my ( $rule, $dispatch ) = splice @routes, 0, 2 ) {
                 _route_hashref( $self, { $rule => $dispatch } );
