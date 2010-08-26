@@ -324,11 +324,11 @@ sub rest_route {
     my $num_routes = scalar @routes;
     if ($num_routes) {
         if ( ref $routes[0] eq 'HASH' ) {    # Hashref
-            _route_hashref( $self, $routes[0] );
+            _method_hashref( $self, $routes[0] );
         }
         elsif ( ( $num_routes % 2 ) == 0 ) {    # Hash
             while ( my ( $rule, $dispatch ) = splice @routes, 0, 2 ) {
-                _route_hashref( $self, { $rule => $dispatch } );
+                _method_hashref( $self, { $rule => $dispatch } );
             }
         }
         else {
@@ -341,7 +341,7 @@ sub rest_route {
     return $self->{'__rest_dispatch_table'};
 }
 
-sub _route_hashref {
+sub _method_hashref {
     my ( $self, $routes ) = @_;
 
     foreach my $rule ( keys %{$routes} ) {
