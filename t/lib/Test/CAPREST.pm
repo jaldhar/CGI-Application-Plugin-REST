@@ -11,17 +11,6 @@ sub setup {
     $self->start_mode('default');
 
 #    $self->rest_route(
-#        foo             => 'wibble',
-#        bar             => \&wobble,
-#        '/app/baz'      => 'woop',
-#        '/app/quux'     => {
-#            GET    => 'ptang',
-#            DELETE => 'krrang',
-#        },
-#        '/app/edna'     => {
-#            POST   => 'blip',
-#            '*'    => 'blop',
-#        },
 #        '/app/grudnuk'  => {
 #            GET   => {
 #                'application/xml' => 'zip',
@@ -36,17 +25,36 @@ sub setup {
     if (defined $self->query->param('bogusdispatch')) {
         $self->rest_route( '/baz/string/*/' );
     }
+    elsif (defined $self->query->param('bogusroute')) {
+        $self->rest_route(
+            '/zing' => [qw/ ptang krrang /],
+        );
+    }
+    elsif (defined $self->query->param('bogusmethod')) {
+        $self->rest_route(
+            '/zing' => {
+                'WTF' => 'ptang',
+            },
+        );
+    }
     elsif (!defined $self->query->param('nodispatch')) {
         # Remember to change rest_route_return_value test in t/routes.t
         # when you change number of routes here. (add 1 for default '/'.)
         my $routes = {
-            '/foo'                    => 'foo',
-            '/bar/:name/:id?/:email'  => 'bar',
+            '/foo'                    => 'wibble',
+            '/bar/:name/:id?/:email'  => \&wobble,
         };
         $self->rest_route($routes);
         $self->rest_route(
-            '/baz/string/*/'          => 'baz',
-            '/quux'                   => 'quux',
+            '/baz/string/*/'          => 'woop',
+            '/quux'                   => {
+                'GET'    => 'ptang',
+                'DELETE' => 'krrang',
+            },
+            '/edna'                   => {
+                'POST'   => 'blip',
+                '*'      => 'blop',
+            },
         );
     }
 
@@ -62,7 +70,7 @@ sub default {
            $q->end_html;
 }
 
-sub foo {
+sub wibble {
     my ($self) = @_;
 
     my $q = $self->query;
@@ -71,7 +79,7 @@ sub foo {
            $q->end_html;
 }
 
-sub bar {
+sub wobble {
     my ($self) = @_;
 
     my $q = $self->query;
@@ -82,7 +90,7 @@ sub bar {
            $q->end_html;
 }
 
-sub baz {
+sub woop {
     my ($self) = @_;
 
     my $q = $self->query;
@@ -92,7 +100,7 @@ sub baz {
            $q->end_html;
 }
 
-sub quux {
+sub ptang {
     my ($self) = @_;
 
     my $q = $self->query;
@@ -101,5 +109,25 @@ sub quux {
     return $q->start_html($title) .
            $q->end_html;
 }
+
+sub blip {
+    my ($self) = @_;
+
+    my $q = $self->query;
+
+    return $q->start_html('blip') .
+           $q->end_html;
+}
+
+sub blop {
+    my ($self) = @_;
+
+    my $q = $self->query;
+
+    return $q->start_html('blop') .
+           $q->end_html;
+}
+
+# krrang() intentionally omitted.
 
 1;

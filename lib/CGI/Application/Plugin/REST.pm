@@ -23,7 +23,7 @@ use warnings;
 use strict;
 use Carp qw( croak );
 use English qw/ -no_match_vars /;
-use List::Util qw/ first /;
+use REST::Utils qw/ request_method /;
 
 =head1 VERSION
 
@@ -109,23 +109,53 @@ sub _rest_dispatch {
                 }{
                         push(@names, $3);
                         $1 . ($4 ? '?([^/]*)?' : '([^/]*)')
-                }gxe;
+                }egsmx;
 
         # '/*/' will become '/(.*)/$' the end / is added to the end of
         # both $rule and $path elsewhere
-        if ( $rule =~ m{/\*/$} ) {
-            $rule =~ s{/\*/$}{/(.*)/\$};
+        if ( $rule =~ m{/\*/$}msx ) {
+            $rule =~ s{/\*/$}{/(.*)/\$}msx;
             push @names, 'dispatch_url_remainder';
         }
 
         # if we found a match, then run with it
-        if ( my @values = ( $path =~ m{^$rule$} ) ) {
+        if ( my @values = ( $path =~ m{^$rule$}msx ) ) {
+
             $self->{'__match'} = $path;
+            my $table = $self->{'__rest_dispatch_table'}->{$key};
+
+            # next check request method.
+            my $method = request_method($q);
+            my $rm_name;
+            if ( exists $table->{$method} ) {
+                $rm_name = $table->{$method};
+            }
+            elsif ( exists $table->{q{*}} ) {
+                $rm_name = $table->{q{*}};
+            }
+            else {
+                croak("405 Method '$method' Not Allowed");
+            }
+
+            my $sub;
+            if ( ref $rm_name eq 'CODE' ) {
+                $sub = $self->$rm_name;
+            }
+            else {
+                eval { $sub = $self->can($rm_name); }; ## no critic 'ErrorHandling::RequireCheckingReturnValueOfEval';
+            }
+            if ( !defined $sub ) {
+                croak("501 Method '$method' Not Implemented by $rm_name");
+            }
+
+            $self->param( 'rm', $rm_name );
 
             #$self->routes_params(@names);
             my %named_args;
 
-            @named_args{@names} = @values if @names;
+            if (@names) {
+                @named_args{@names} = @values;
+            }
 
             # force params into $self->query. NOTE that it will overwrite
             # any existing param with the same name
@@ -133,14 +163,12 @@ sub _rest_dispatch {
                 $q->param( "$k", $named_args{$k} );
             }
 
-            my $rm_name = $self->{'__rest_dispatch_table'}->{$key};
-            $self->param( 'rm', $rm_name );
-
             $self->{'__r_params '} = {
                 'parsed_params: ' => \%named_args,
                 'path_received: ' => $path,
                 'rule_matched: '  => $rule,
-                'runmode: '       => $rm_name
+                'runmode: '       => $rm_name,
+                'method'          => $method,
             };
 
             return $rm_name;
@@ -287,35 +315,75 @@ response is set to 400 (See L<"DIAGNOSTICS">.)
 sub rest_route {
     my ( $self, @routes ) = @_;
 
-    if (!exists $self->{'__rest_dispatch_table'}) {
+    if ( !exists $self->{'__rest_dispatch_table'} ) {
         $self->{'__rest_dispatch_table'} = { q{/} => 'dump_html' };
     }
 
     my $rr_m = $self->{'__rest_dispatch_table'};
 
     my $num_routes = scalar @routes;
-    if ( $num_routes ) {
-        if ( ref $routes[0] eq 'HASH' ) {        # Hashref
-            foreach my $route ( keys %{ $routes[0] } ) {
-                $self->run_modes( [ $routes[0]->{$route} ] );
-            }
-            %{ $rr_m } = ( %{ $rr_m }, %{ $routes[0] } );
+    if ($num_routes) {
+        if ( ref $routes[0] eq 'HASH' ) {    # Hashref
+            _route_hashref( $self, $routes[0] );
         }
-        #elsif ( ref $routes[0] = 'ARRAY' ) {
+
+        #elsif ( ref $routes[0] = 'ARRAY' ) {     # Arrayref
+        #    foreach my $run_mode ( @{ $params[0] } ) {
+        #        _route_hashref($self, { $run_mode => $run_mode }, );
+        #    }
         #}
-        elsif ( ( $num_routes % 2 ) == 0 ) { # Hash
-            for ( my $i = 1 ; $i < $num_routes; $i += 2 ) {
-                my $rm_name = $routes[$i];
-                $self->run_modes( [$rm_name] );
+        elsif ( ( $num_routes % 2 ) == 0 ) {    # Hash
+            while ( my ( $rule, $dispatch ) = splice @routes, 0, 2 ) {
+                _route_hashref( $self, { $rule => $dispatch } );
             }
-            %{ $rr_m } = ( %{ $rr_m }, @routes );
         }
         else {
-            croak('Odd number of elements passed to rest_route().  Not a valid hash');
+            croak(
+'Odd number of elements passed to rest_route().  Not a valid hash'
+            );
         }
     }
 
     return $self->{'__rest_dispatch_table'};
+}
+
+sub _route_hashref {
+    my ( $self, $routes ) = @_;
+
+    foreach my $rule ( keys %{$routes} ) {
+
+        my @methods;
+        my $route_type = ref $routes->{$rule};
+        if ( $route_type eq 'HASH' ) {
+            @methods = keys %{ $routes->{$rule} };
+        }
+        elsif ( $route_type eq 'CODE' ) {
+            $routes->{$rule} = { q{*} => $routes->{$rule} };
+            push @methods, q{*};
+        }
+        elsif ( $route_type eq q{} ) {
+            $routes->{$rule} = { q{*} => $routes->{$rule} };
+            push @methods, q{*};
+        }
+        else {
+            croak "$rule (", $routes->{$rule},
+              ') has an invalid route definition';
+        }
+
+        my @request_methods = ( 'GET', 'POST', 'PUT', 'DELETE', 'HEAD', q{*} );
+        foreach my $req (@methods) {
+            if ( scalar grep { $_ eq $req } @request_methods ) {
+                my $func = $routes->{$rule}->{$req};
+                $self->{'__rest_dispatch_table'}->{$rule}->{$req} = $func;
+                $self->run_modes( [$func] );
+            }
+            else {
+                croak "$req is not a valid request method\n";
+            }
+        }
+    }
+
+    return;
 }
 
 =head1 DIAGNOSTICS
