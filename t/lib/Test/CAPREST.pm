@@ -10,18 +10,6 @@ sub setup {
     $self->run_modes([ 'default' ]);
     $self->start_mode('default');
 
-#    $self->rest_route(
-#        '/app/grudnuk'  => {
-#            GET   => {
-#                'application/xml' => 'zip',
-#                '*/*'             => 'zap',
-#            },
-#            PUT   => {
-#                'application/xml' => 'zoom',
-#            },
-#        },
-#    );
-
     if (defined $self->query->param('bogusdispatch')) {
         $self->rest_route( '/baz/string/*/' );
     }
@@ -34,6 +22,13 @@ sub setup {
         $self->rest_route(
             '/zing' => {
                 'WTF' => 'ptang',
+            },
+        );
+    }
+    elsif (defined $self->query->param('bogussubroute')) {
+        $self->rest_route(
+            '/zing' => {
+                'GET' => ['application/xml', 'arf'],
             },
         );
     }
@@ -54,6 +49,18 @@ sub setup {
             '/edna'                   => {
                 'POST'   => 'blip',
                 '*'      => 'blop',
+            },
+            '/grudnuk'                => {
+                GET      => {
+                    'application/xml' => 'zip',
+                    '*/*'             => 'zap',
+                },
+                PUT      => {
+                    'application/xml' => 'zoom',
+                },
+            },
+            '/arf'       => {
+                GET                   => 'zap',
             },
         );
     }
@@ -110,6 +117,8 @@ sub ptang {
            $q->end_html;
 }
 
+# krrang() intentionally omitted.
+
 sub blip {
     my ($self) = @_;
 
@@ -128,6 +137,31 @@ sub blop {
            $q->end_html;
 }
 
-# krrang() intentionally omitted.
+sub zip {
+    my ($self) = @_;
+
+    my $q = $self->query;
+
+    return $q->start_html('zip') .
+           $q->end_html;
+}
+
+sub zap {
+    my ($self) = @_;
+
+    my $q = $self->query;
+
+    return $q->start_html('zap') .
+           $q->end_html;
+}
+
+sub zoom {
+    my ($self) = @_;
+
+    my $q = $self->query;
+
+    return $q->start_html('zoom') .
+           $q->end_html;
+}
 
 1;

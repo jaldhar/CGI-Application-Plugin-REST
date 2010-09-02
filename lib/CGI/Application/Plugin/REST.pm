@@ -23,7 +23,7 @@ use warnings;
 use strict;
 use Carp qw( croak );
 use English qw/ -no_match_vars /;
-use REST::Utils qw/ request_method /;
+use REST::Utils qw/ media_type request_method /;
 
 =head1 VERSION
 
@@ -126,16 +126,27 @@ sub _rest_dispatch {
 
             # next check request method.
             my $method = request_method($q);
-            my $rm_name;
+
             if ( exists $table->{$method} ) {
-                $rm_name = $table->{$method};
+                $table = $table->{$method};
             }
             elsif ( exists $table->{q{*}} ) {
-                $rm_name = $table->{q{*}};
+                $table = $table->{q{*}};
             }
             else {
                 croak("405 Method '$method' Not Allowed");
             }
+
+            # then check MIME media type
+            my @types = keys %{$table};
+            my $preferred = media_type( $q, \@types );
+            if ( !defined $preferred ) {
+                croak('415 Unsupported Media Type');
+            }
+            if ( $preferred eq q{} ) {
+                $preferred = q{*/*};
+            }
+            my $rm_name = $table->{$preferred};
 
             my $sub;
             if ( ref $rm_name eq 'CODE' ) {
@@ -169,6 +180,7 @@ sub _rest_dispatch {
                 'rule_matched: '  => $rule,
                 'runmode: '       => $rm_name,
                 'method'          => $method,
+                'mimetype'        => $preferred,
             };
 
             return $rm_name;
@@ -367,14 +379,41 @@ sub _method_hashref {
         my @request_methods = ( 'GET', 'POST', 'PUT', 'DELETE', 'HEAD', q{*} );
         foreach my $req (@methods) {
             if ( scalar grep { $_ eq $req } @request_methods ) {
-                my $func = $routes->{$rule}->{$req};
-                $self->{'__rest_dispatch_table'}->{$rule}->{$req} = $func;
-                $self->run_modes( [$func] );
+                my $subroute = $routes->{$rule}->{$req};
+                _mime_hashref( $self, $subroute, $rule, $req );
             }
             else {
                 croak "$req is not a valid request method\n";
             }
         }
+    }
+
+    return;
+}
+
+sub _mime_hashref {
+    my ( $self, $subroute, $rule, $req ) = @_;
+
+    my $subroute_type = ref $subroute;
+    if ( $subroute_type eq 'HASH' ) {
+        foreach my $type ( keys %{$subroute} ) {
+            my $func = $subroute->{$type};
+            $self->{'__rest_dispatch_table'}->{$rule}->{$req}->{$type} = $func;
+            $self->run_modes( [$func] );
+        }
+    }
+    elsif ( $subroute_type eq 'CODE' ) {
+        my $func = $subroute;
+        $self->{'__rest_dispatch_table'}->{$rule}->{$req}->{q{*/*}} = $func;
+        $self->run_modes( [$func] );
+    }
+    elsif ( $subroute_type eq q{} ) {
+        my $func = $subroute;
+        $self->{'__rest_dispatch_table'}->{$rule}->{$req}->{q{*/*}} = $func;
+        $self->run_modes( [$func] );
+    }
+    else {
+        croak "$subroute is an invalid route definition";
     }
 
     return;
