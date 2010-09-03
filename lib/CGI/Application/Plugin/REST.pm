@@ -63,15 +63,7 @@ The following functions are available.
 sub import {
     my $caller = scalar caller;
 
-    $caller->add_callback(
-        'init',
-        sub {
-            my ($self) = @_;
-            $self->mode_param( \&_rest_dispatch );
-
-            return;
-        }
-    );
+    $caller->add_callback( 'prerun', \&_rest_dispatch, );
     goto &Exporter::import;
 }
 
@@ -87,7 +79,8 @@ sub _rest_dispatch {
 
     # get the module name from the table
     if ( !exists $self->{'__rest_dispatch_table'} ) {
-        croak "no __rest_dispatch table!\n";
+        $self->header_add( Status => '400 no __rest_dispatch table!' );
+        return;
     }
 
     # look at each rule and stop when we get a match
@@ -134,14 +127,17 @@ sub _rest_dispatch {
                 $table = $table->{q{*}};
             }
             else {
-                croak("405 Method '$method' Not Allowed");
+                $self->header_add(
+                    Status => "405 Method '$method' Not Allowed" );
+                return;
             }
 
             # then check MIME media type
             my @types = keys %{$table};
             my $preferred = media_type( $q, \@types );
             if ( !defined $preferred ) {
-                croak('415 Unsupported Media Type');
+                $self->header_add( Status => '415 Unsupported Media Type' );
+                return;
             }
             if ( $preferred eq q{} ) {
                 $preferred = q{*/*};
@@ -156,7 +152,9 @@ sub _rest_dispatch {
                 eval { $sub = $self->can($rm_name); }; ## no critic 'ErrorHandling::RequireCheckingReturnValueOfEval';
             }
             if ( !defined $sub ) {
-                croak("501 Method '$method' Not Implemented by $rm_name");
+                $self->header_add( Status =>
+                      "501 Method '$method' Not Implemented by $rm_name" );
+                return;
             }
 
             $self->param( 'rm', $rm_name );
@@ -183,11 +181,13 @@ sub _rest_dispatch {
                 'mimetype'        => $preferred,
             };
 
-            return $rm_name;
+            $self->prerun_mode($rm_name);
+            return;
         }
     }
 
-    return $self->start_mode;
+    $self->header_add( Status => '400 No route found' );
+    return;
 }
 
 =head3 rest_route()
