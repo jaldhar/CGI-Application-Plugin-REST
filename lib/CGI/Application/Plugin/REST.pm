@@ -79,7 +79,7 @@ sub _rest_dispatch {
 
     # get the module name from the table
     if ( !exists $self->{'__rest_dispatch_table'} ) {
-        $self->header_add( Status => '400 no __rest_dispatch table!' );
+        $self->header_add( -status => '400 no __rest_dispatch table!' );
         return;
     }
 
@@ -128,7 +128,8 @@ sub _rest_dispatch {
             }
             else {
                 $self->header_add(
-                    Status => "405 Method '$method' Not Allowed" );
+                    -status => "405 Method '$method' Not Allowed",
+                );
                 return;
             }
 
@@ -136,7 +137,7 @@ sub _rest_dispatch {
             my @types = keys %{$table};
             my $preferred = media_type( $q, \@types );
             if ( !defined $preferred ) {
-                $self->header_add( Status => '415 Unsupported Media Type' );
+                $self->header_add( -status => '415 Unsupported Media Type' );
                 return;
             }
             if ( $preferred eq q{} ) {
@@ -152,7 +153,7 @@ sub _rest_dispatch {
                 eval { $sub = $self->can($rm_name); }; ## no critic 'ErrorHandling::RequireCheckingReturnValueOfEval';
             }
             if ( !defined $sub ) {
-                $self->header_add( Status =>
+                $self->header_add( -status =>
                       "501 Method '$method' Not Implemented by $rm_name" );
                 return;
             }
@@ -186,7 +187,7 @@ sub _rest_dispatch {
         }
     }
 
-    $self->header_add( Status => '400 No route found' );
+    $self->header_add( -status => '400 No route found' );
     return;
 }
 

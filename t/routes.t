@@ -41,7 +41,7 @@ eval {
 ok(defined $EVAL_ERROR, 'incomplete dispatch table');
 
 $mech->get('http://localhost/bogus/mark/76/mark@stosberg.com');
-$mech->title_is('default', 'non-existent route');
+is($mech->status, 400, 'non-existent route');
 
 $mech->get('http://localhost/baz/string/good/');
 $mech->title_is('good', 'route with a wildcard parameter');
@@ -52,15 +52,11 @@ $mech->title_is('evil', 'route with a a different wildcard parameter');
 $mech->get('http://localhost/quux');
 $mech->title_is('8', 'rest_route return value');
 
-eval {
-    $mech->post('http://localhost/quux', content_type => 'text/html');
-};
-ok($EVAL_ERROR, 'request method not allowed');
+$mech->post('http://localhost/quux', content_type => 'text/html');
+is($mech->status, 405, 'request method not allowed');
 
-eval {
-    $mech->post('http://localhost/quux?_method=delete', content => q{});
-};
-ok($EVAL_ERROR, 'method not implemented');
+$mech->post('http://localhost/quux?_method=delete', content => q{});
+is($mech->status, 501, 'method not implemented');
 
 eval {
     $mech->get('http://localhost/zing?bogusroute=1');
@@ -91,10 +87,8 @@ eval {
 };
 ok($EVAL_ERROR, 'invalid subroute_type');
 
-eval {
 $mech->put('http://localhost/grudnuk', content => q{}, content_type => 'image/gif');
-};
-ok($EVAL_ERROR, 'unsupported content_type');
+is($mech->status, 415, 'unsupported content_type');
 
 $mech->get('http://localhost/arf');
 $mech->title_is('zap', 'subroute is not a hashref');
