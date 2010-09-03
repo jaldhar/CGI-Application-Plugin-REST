@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );
-use Test::More tests => 20;
+use Test::More tests => 21;
 use Test::WWW::Mechanize::CGIApp;
 use lib 't/lib';
 use Test::CAPREST;
@@ -54,6 +54,7 @@ $mech->title_is('8', 'rest_route return value');
 
 $mech->post('http://localhost/quux', content_type => 'text/html');
 is($mech->status, 405, 'request method not allowed');
+is($mech->response->header('allow'), 'DELETE, GET', 'allow header sent');
 
 $mech->post('http://localhost/quux?_method=delete', content => q{});
 is($mech->status, 501, 'method not implemented');
