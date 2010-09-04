@@ -129,7 +129,7 @@ sub _rest_dispatch {
             else {
                 $self->header_add(
                     -status => "405 Method '$method' Not Allowed",
-                    -allow  => (join q{, }, sort keys %{$table}),
+                    -allow  => ( join q{, }, sort keys %{$table} ),
                 );
                 return;
             }
