@@ -159,7 +159,7 @@ sub _rest_dispatch {
                 return;
             }
 
-            $self->param( 'rm', $rm_name );
+            $self->param( $self->mode_param, $rm_name );
 
             #$self->routes_params(@names);
             my %named_args;
