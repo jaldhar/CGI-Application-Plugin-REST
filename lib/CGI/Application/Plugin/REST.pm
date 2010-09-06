@@ -151,7 +151,7 @@ sub _rest_dispatch {
                 $sub = $self->$rm_name;
             }
             else {
-                eval { $sub = $self->can($rm_name); }; ## no critic 'ErrorHandling::RequireCheckingReturnValueOfEval';
+                $sub = eval { return $self->can($rm_name); };
             }
             if ( !defined $sub ) {
                 $self->header_add( -status =>
