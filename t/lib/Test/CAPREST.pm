@@ -33,6 +33,14 @@ sub setup {
             },
         );
     }
+    elsif (defined $self->query->param('routeprefix')) {
+        $self->rest_route(
+            '/zing' => {
+                'GET' => 'zap',
+            },
+        );
+        $self->rest_route_prefix('/app');
+    }
     elsif (!defined $self->query->param('nodispatch')) {
         # Remember to change rest_route_return_value test in t/routes.t
         # when you change number of routes here. (add 1 for default '/'.)

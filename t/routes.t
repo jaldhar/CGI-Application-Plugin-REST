@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );
-use Test::More tests => 21;
+use Test::More tests => 22;
 use Test::WWW::Mechanize::CGIApp;
 use lib 't/lib';
 use Test::CAPREST;
@@ -93,3 +93,6 @@ is($mech->status, 415, 'unsupported content_type');
 
 $mech->get('http://localhost/arf');
 $mech->title_is('zap', 'subroute is not a hashref');
+
+$mech->get('http://localhost/app/zing?routeprefix=1');
+$mech->title_is('zap', 'rest_route_prefix');

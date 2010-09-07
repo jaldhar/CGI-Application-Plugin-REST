@@ -31,7 +31,7 @@ This document describes CGI::Application::Plugin::REST Version 0.1
 
 our $VERSION = '0.1';
 
-our @EXPORT_OK = qw/ rest_error_mode rest_route /;
+our @EXPORT_OK = qw/ rest_error_mode rest_route rest_route_prefix /;
 
 our %EXPORT_TAGS = ( 'all' => [@EXPORT_OK] );
 
@@ -97,6 +97,7 @@ sub _rest_dispatch {
 
         # $rule will be transformed later so save the original form first.
         my $key = $rule;
+        $rule = $self->rest_route_prefix . $rule;
 
         # translate the rule into a regular expression, but remember where
         # the named args are.
@@ -466,6 +467,46 @@ sub _mime_hashref {
     }
 
     return;
+}
+
+=head3 rest_route_prefix()
+
+Use this function to set a prefix for routes to avoid unnecessary repetition
+when you have a number of similar ones.
+
+Example 1:
+    # matches requests to /zing
+    $self->rest_route(
+         '/zing' => {
+             'GET' => 'zap',
+         },
+    );
+
+    $self->rest_route_prefix('/app')
+    # from now on requests to /app/zing will match instead of /zing
+
+    my $prefix = $self->rest_route_prefix # $prefix equals '/app'
+
+=cut
+
+sub rest_route_prefix {
+    my ( $self, $prefix ) = @_;
+
+    # First use?  Create new __rest_route_prefix
+    if ( !exists( $self->{'__rest_route_prefix'} ) ) {
+        $self->{'__rest_route_prefix'} = q{};
+    }
+
+    # If data is provided, set it.
+    if ( defined $prefix ) {
+
+        # make sure no trailing slash is present on the root.
+        $prefix =~ s{/$}{}msx;
+        $self->{'__rest_route_prefix'} = $prefix;
+    }
+
+    return $self->{'__rest_route_prefix'};
+
 }
 
 =head1 DIAGNOSTICS
