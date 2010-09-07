@@ -5,9 +5,7 @@ CGI::Application::Plugin::REST - Helps implement RESTful architecture in CGI app
 
 =head1 SYNOPSIS
 
-    use CGI::Application::Plugin::REST;
-    my $app = CGI::Application::Plugin::REST->new();
-    $app->run();
+    use CGI::Application::Plugin::REST qw( :all );
 
 =head1 ABSTRACT
 
@@ -48,13 +46,17 @@ This plugin contains a number of functions to support the various REST
 concepts. They try to use existing L<CGI::Application> functionality
 wherever possible.
 
-C<use>'ing this plugin will override L<CGI::Application>s' standard dispatch
+C<use>'ing this plugin will intercept L<CGI::Application>s' standard dispatch
 mechanism.  Instead of being selected based on a query parameter like C<rm>,
-the run mode will be determined by the C<PATH_INFO> information in a URL.
+the run mode will be determined by the C<PATH_INFO> information in the
+request URI.  (Referred from here on, as a "route".)  This is done via a
+prerun hook so it should be compatible with other L<CGI::Application>
+plugins.
 
 =head1 FUNCTIONS
 
-The following functions are available.
+The following functions are available.  None of them are exported by default.
+You can use the C<:all> tag to import all public functions.
 
 =cut
 
@@ -67,19 +69,17 @@ sub import {
     goto &Exporter::import;
 }
 
+# prerun hook to set the run mode based on the request URI.
+#
 sub _rest_dispatch {
     my ($self) = @_;
-
-    # All this routine, except a few own modifications was borrowed from the
-    # wonderful Michael Peter's CGI::Application::Dispatch module that can be
-    # found here:  http://search.cpan.org/~wonko/CGI-Application-Dispatch/
 
     my $q    = $self->query;
     my $path = $q->path_info;
 
     # get the module name from the table
     if ( !exists $self->{'__rest_dispatch_table'} ) {
-        $self->header_add( -status => '400 no __rest_dispatch table!' );
+        $self->header_add( -status => '400 No Dispatch Table' );
         return;
     }
 
@@ -188,16 +188,21 @@ sub _rest_dispatch {
         }
     }
 
-    $self->header_add( -status => '400 No route found' );
+    $self->header_add( -status => '404 No Route Found' );
     return;
 }
 
 =head3 rest_route()
 
-This function configures the mapping of URIs to methods within your
-L<CGI::Application>.  The mapping can be specified in several different
-styles.  Assume for the purpose of the following examples that your
-instance script has a base URI of C<http://localhost/app>
+When This function is given a hash or hashref, it configures the mapping of
+routes to handlers (run modes within your L<CGI::Application>).
+
+It returns the map of routes and handlers.
+
+=head4 Routes
+
+Assume for the purpose of the following examples that your instance script has 
+a base URI of C<http://localhost/>
 
 HINT: Your web server might not execute CGI scripts unless they have an
 extension of .cgi so your actual script might be C<http://localhost/app.cgi>.
@@ -205,124 +210,127 @@ However it is considered unRESTful to include infrastructural details in your
 URLs.  Use your web servers URL rewriting features (i.e. mod_rewrite in
 Apache) to hide the extension.
 
-Example 1: arrayref
+A route looks like a URI with segments seperated by /'s.
 
-    $self->rest_route( [ qw/ foo bar baz / ] );
+Example 1: a simple route
 
-The most basic style is to specify an arrayref where each of the elements will 
-represent the first part of C<PATH_INFO> (i.e. upto the first '/' not counting
-the leading '/') This will be combined with the base URI.  Requests to the
-resulting URI will be dispatched to a method in your module named
-E<lt>elementE<gt>
+    /foo
 
-For example a request to C<http://localhost/app/foo> will be dispatched to
-C<foo()>.  (It is upto you to make sure such a method exists.)  A request to
-C<http://localhost/app/baz> will dispatch to C<baz> and so on.
+A segment in a route is matched literally.  So if a request URI matches
+http://localhost/foo, the run mode that handles the route in example 1 will
+be used.
 
-If you pass a hash as the parameter to C<rest_route> more complex mappings are
-possible, depending on the form of the keys and values of the hash.
+Routes can have more complex specifications.
 
-Example 2: hash
+Example 2: a more complex route
+
+    /bar/:name/:id?/:email
+
+If a segment of a route is prefixed with a :, it is not matched literally but
+treated as a parameter name.  The value of the parameter is whatever actually
+got matched.  If the segment ends with a ?, it is optional otherwise it is
+required.  The values of these named paramaters can be retrieved with the
+C<rest_param()> method.
+
+In example 2, http://localhost/bar/jaldhar/76/jaldhar@braincells.com would
+match.  C<rest_param('name')> would return 'jaldhar',  C<rest_param('id')>
+would return 76, and C<rest_param('email')> would return
+'jaldhar@braincells.com'.
+
+If the request URI was http://localhost/bar/jaldhar/jaldhar@braincells.com/,
+C<rest_param('email')> would return 'jaldhar@braincells.com' and
+C<rest_param('name')> would return 'jaldhar'. C<rest_param('id')> would return
+undef.
+
+If the request URI was http://localhost/bar/jaldhar/76 or
+http://localhost/jaldhar/, there would be no match at all because the required
+parameter ':email' is missing.
+
+Note: Each named parameter is returned as a scalar.  If you want ':email' to
+actually be an email address, it is up to your code to validate it before use.
+
+Example 3: a wild card route
+
+    /baz/string/*/
+
+If the route specification contains /*/, everything in that segment will be
+put into the special parameter 'dispatch_uri_remainder' which you can retrieve
+with C<"rest_param()"> just like any other parameter.  Only one wildcard can
+be specified per route.  Given the request URI
+http://localhost/baz/string/good, C<rest_param('dispatch_uri_remainder')>
+would return 'good', with http://localhost/baz/string/evil it would return
+'evil' and with http://localhost/baz/string/lawful-neutral it would return
+'lawful-neutral'.
+
+=head4 Handlers
+
+The most basic handler is a scalar or coderef.
+
+Example 4: Basic Handlers
+
+    my $routes = {
+       '/foo'                    => 'wibble',
+       '/bar/:name/:id?/:email'  => \&wobble,
+       '/baz/string/*/'          => 'woop',
+    };
+    $self->rest_route($routes);
+
+In example 4, a request to C<http://localhost/app/foo> will be dispatched to
+C<wibble()>.  (It is upto you to make sure such a method exists.)  A request
+to C<http://localhost/app/bar/jaldhar/76/jaldhar@braincells.com> will dispatch 
+to C<wobble()>.  A request to http://localhost/login will raise an error.
+
+Example 5: More complex handlers
 
     $self->rest_route(
-        foo             => 'wibble',
-        bar             => \&wobble,
-        '/app/baz'      => 'woop',
-        '/app/quux'     => {
-            GET    => 'ptang',
-            DELETE => 'krrang',
+        '/quux'                   => {
+            'GET'    => 'ptang',
+            'DELETE' => 'krrang',
         },
-        '/app/edna'     => {
-            POST   => 'blip',
-            '*'    => 'blop',
+        '/edna'                   => {
+            'POST'   => 'blip',
+            '*'      => 'blop',
         },
-        '/app/grudnuk'  => {
-	        GET    => {
+        '/grudnuk'                => {
+            'GET'    => {
                 'application/xml' => 'zip',
                 '*/*'             => 'zap',
             },
-            PUT    => {
+            PUT      => {
                 'application/xml' => 'zoom',
-	        },
+            },
         },
-    );
+    }
 
-If the key is a single word, it will represent the first path segment of
-C<PATH_INFO> as in Example 1.  The value can be a scalar which is the name of
-a method or a coderef.
-
-In example 2, a request to C<http://localhost/app/foo> will be dispatched to
-the method C<wibble()>.  A request to C<http://localhost/app/bar> will
-dispatch to C<wobble()> and so on.
-
-If the key is a path (which for the purposes of this module is defined as a
-scalar that begins with a '/') it will be matched against C<PATH_INFO>.  The
-match must be exact.  if the value is a scalar or a coderef the corresponding
-method will be dispatched to.
-
-In example 2, a request to C<http://localhost/app/baz> will be dispatched to
-C<woop()>.
-
-If the value is a hash, the keys of the second-level hash are HTTP methods and
-the values if scalars or coderefs, are functions to be dispatched to.  The key
+If the handler is a hashref, the keys of the second-level hash are HTTP
+methods and the values if scalars or coderefs, are run modes.  The key
 can also be * which matches all methods not explicitly specified.  If a valid
 method cannot be matched, an error is raised and the HTTP status of the
 response is set to 405.  (See L<"DIAGNOSTICS">)
 
-In example 2, a C<GET> request to C<http://localhost/app/quux> will be
-dispatched to C<ptang()>.  A C<DELETE> to C<http://localhost/app/quux> will
-dispatch to C<krrang()>.  A C<POST>, C<PUT> or C<HEAD> will cause an error.
+In example 5, a GET request to http://localhost/quux will be dispatched to
+C<ptang()>.  A DELETE to http://localhost/quux will dispatch to C<krrang()>.
+A POST, PUT or HEAD will cause an error.
 
-A C<POST> request to C<http://localhost/app/edna> will dispatch to C<zip()>
+A C<POST> request to http://localhost/edna will dispatch to C<zip()>
 while any other type of request to that URL will dispatch to C<blop()>
 
 The values of the second-level hash can also be hashes.  In this case the keys
-of the third-level hash represent MIME media types.  The values can be scalars
-representing names of methods or coderefs.  The best possible match is made
-according to the HTTP Accept header sent in the request.  The string ' * /*'
-matches any MIME media type.  If a valid MIME media type cannot be matched an
-error is raised and the HTTP status of the response is set to 415.  (See
-L<"DIAGNOSTICS">)
+of the third-level hash represent MIME media types.  The values are run modes.
+The best possible match is made use C<best_match()> from L<REST::Utils>.
+according to the HTTP Accept header sent in the request.  If a valid MIME
+media type cannot be matched an error is raised and the HTTP status of the
+response is set to 415.  (See L<"DIAGNOSTICS">)
 
-In example 2, a C<GET> request to C<http://localhost/ app/grudnuk> with MIME
-media type application / xml will dispatch to C<zip()>. If the same request is
-made with any other MIME media type, the method C <zap()> will be called
+In example 5, a C<GET> request to http://localhost/grudnuk with MIME
+media type application/xml will dispatch to C<zip()>. If the same request is
+made with any other MIME media type, the method C<zap()> will be called
 instead. A C <PUT> request made to the same URL with MIME media type
-application/xml will dispatch to C <zoom()>. Any other MIME media type will
-cause an error to be raised.
+application/xml will dispatch to C <zoom()>. Any other combination of HTTP
+methods or MIME media types will cause an error to be raised.
 
-Instead of a hash, you can use a hashref as in example 3.
-
-Example 3 :
-
-    my $routes = {
-        foo             => 'wibble',
-        bar             => \&wobble,
-        '/app/baz'      => 'woop',
-        '/app/quux'     => {
-            GET    => 'ptang',
-            DELETE => 'krrang',
-        },
-        '/app/edna'     => {
-            POST   => 'blip',
-            '*'    => 'blop',
-        },
-        '/app/grudnuk'  => {
-	        GET    => {
-                'application/xml' => 'zip',
-                '*/*'             => 'zap',
-            },
-            PUT    => {
-                'application/xml' => 'zoom',
-	        },
-        },
-    );
-
-    $self->rest_route( $routes );
-
-
-If no URI can be matched, an error is raised and the HTTP status of the 
-response is set to 400 (See L<"DIAGNOSTICS">.)
+If no URI can be matched, an error is raised and the HTTP status of the
+response is set to 404 (See L<"DIAGNOSTICS">.)
 
 =cut
 
@@ -369,7 +377,7 @@ sub _method_hashref {
             $routes->{$rule} = { q{*} => $routes->{$rule} };
             push @methods, q{*};
         }
-        elsif ( $route_type eq q{} ) {
+        elsif ( $route_type eq q{} ) {    # scalar
             $routes->{$rule} = { q{*} => $routes->{$rule} };
             push @methods, q{*};
         }
@@ -409,7 +417,7 @@ sub _mime_hashref {
         $self->{'__rest_dispatch_table'}->{$rule}->{$req}->{q{*/*}} = $func;
         $self->run_modes( [$func] );
     }
-    elsif ( $subroute_type eq q{} ) {
+    elsif ( $subroute_type eq q{} ) {    # scalar
         my $func = $subroute;
         $self->{'__rest_dispatch_table'}->{$rule}->{$req}->{q{*/*}} = $func;
         $self->run_modes( [$func] );
@@ -423,26 +431,34 @@ sub _mime_hashref {
 
 =head1 DIAGNOSTICS
 
-During the dispatch process, errors can occur in certain circumstances. Here
-is a list along with status codes and messages.
+During the dispatch process, errors can occur in certain circumstances. If an
+error occurs the appropriate HTTP status Here is a list of status codes and
+messages.
 
 =over 4
 
-=item * 400 Bad Request '$param'
+=item * 400 No Dispatch Table
 
-The path info passed to the script is in the wrong format from that specified
-in L<"rest_route()">.  C<$param> will contain the segment of path info that 
-failed to match.
+This error can occur if L<"rest_route()"> was not called.
 
-=item * 405 Method '$method' not Allowed
+=item * 404 No Route Found
 
-The route you specified with L<"rest_route()"> does not allow this HTTP request
-method.  An HTTP C<Allow> header is added to the response specifying which
-methods can be used.
+None of the specified routes matched the request URI.
+
+=item * 405 Method '$method' Not Allowed
+
+The route you specified with L<"rest_route()"> does not allow this HTTP
+request method.  An HTTP C<Allow> header is added to the response specifying
+which methods can be used.
+
+=item * 415 Unsupported Media Type
+
+None of the MIME media types requested by the client can be returned by this
+route.
 
 =item * 500 Application Error
 
-The function that has been called for this run_mode C<die>'d somewhere.
+The function that was called for this run_mode C<die>'d somewhere.
 
 =item * 501 Function Doesn't Exist
 
@@ -473,12 +489,6 @@ The application framework this module plugs into.
 
 This module by Matthew O'Connor gave me some good ideas.
 
-=item * L<CGI::Application::Dispatch>:
-
-A L<CGI::Application> helper that also does URI based function dispatch and a
-lot more. If you find you are running into limitations with this module, you
-should look at L<CGI::Application::Dispatch>.
-
 =item * L<http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm>:
 
 Roy Fieldings' doctoral thesis in which the term REST was first defined.
@@ -489,6 +499,11 @@ Roy Fieldings' doctoral thesis in which the term REST was first defined.
 understanding the ins and outs of REST.
 
 =back
+
+=head1 THANKS
+
+Much of the code in this module is based on L<CGI::Application::Plugin:Routes>
+by JuliE<aacute>n Porta who in turn credits Michael Peter's L<CGI::Application::Dispatch>.
 
 =head1 AUTHOR
 
@@ -511,6 +526,6 @@ with this distribution.
 
 =cut
 
-1;    # End of CGI::Application::Plugin::REST::Routes
+1;    # End of CGI::Application::Plugin::REST
 
 __END__

@@ -41,7 +41,7 @@ eval {
 ok(defined $EVAL_ERROR, 'incomplete dispatch table');
 
 $mech->get('http://localhost/bogus/mark/76/mark@stosberg.com');
-is($mech->status, 400, 'non-existent route');
+is($mech->status, 404, 'non-existent route');
 
 $mech->get('http://localhost/baz/string/good/');
 $mech->title_is('good', 'route with a wildcard parameter');
