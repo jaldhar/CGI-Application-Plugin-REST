@@ -31,7 +31,7 @@ This document describes CGI::Application::Plugin::REST Version 0.1
 
 our $VERSION = '0.1';
 
-our @EXPORT_OK = qw/ rest_route /;
+our @EXPORT_OK = qw/ rest_error_mode rest_route /;
 
 our %EXPORT_TAGS = ( 'all' => [@EXPORT_OK] );
 
@@ -49,9 +49,9 @@ wherever possible.
 C<use>'ing this plugin will intercept L<CGI::Application>s' standard dispatch
 mechanism.  Instead of being selected based on a query parameter like C<rm>,
 the run mode will be determined by the C<PATH_INFO> information in the
-request URI.  (Referred from here on, as a "route".)  This is done via a
-prerun hook so it should be compatible with other L<CGI::Application>
-plugins.
+request URI.  (Referred from here on, as a "route".)  This is done via
+overriding L<CGI::Application>'s C<mode_param()> function so it should be
+compatible with other L<CGI::Application> plugins.
 
 =head1 FUNCTIONS
 
@@ -65,7 +65,15 @@ You can use the C<:all> tag to import all public functions.
 sub import {
     my $caller = scalar caller;
 
-    $caller->add_callback( 'prerun', \&_rest_dispatch, );
+    $caller->add_callback(
+        'init',
+        sub {
+            my ($self) = @_;
+            $self->mode_param( \&_rest_dispatch );
+
+            return;
+        }
+    );
     goto &Exporter::import;
 }
 
@@ -80,7 +88,7 @@ sub _rest_dispatch {
     # get the module name from the table
     if ( !exists $self->{'__rest_dispatch_table'} ) {
         $self->header_add( -status => '400 No Dispatch Table' );
-        return;
+        return $self->rest_error_mode;
     }
 
     # look at each rule and stop when we get a match
@@ -131,7 +139,7 @@ sub _rest_dispatch {
                     -status => "405 Method '$method' Not Allowed",
                     -allow  => ( join q{, }, sort keys %{$table} ),
                 );
-                return;
+                return $self->rest_error_mode;
             }
 
             # then check MIME media type
@@ -139,7 +147,7 @@ sub _rest_dispatch {
             my $preferred = media_type( $q, \@types );
             if ( !defined $preferred ) {
                 $self->header_add( -status => '415 Unsupported Media Type' );
-                return;
+                return $self->rest_error_mode;
             }
             if ( $preferred eq q{} ) {
                 $preferred = q{*/*};
@@ -156,10 +164,10 @@ sub _rest_dispatch {
             if ( !defined $sub ) {
                 $self->header_add( -status =>
                       "501 Method '$method' Not Implemented by $rm_name" );
-                return;
+                return $self->rest_error_mode;
             }
 
-            $self->param( $self->mode_param, $rm_name );
+            $self->param( 'rm', $rm_name );
 
             #$self->routes_params(@names);
             my %named_args;
@@ -183,13 +191,44 @@ sub _rest_dispatch {
                 'mimetype'        => $preferred,
             };
 
-            $self->prerun_mode($rm_name);
-            return;
+            return $rm_name;
         }
     }
 
     $self->header_add( -status => '404 No Route Found' );
-    return;
+    return $self->rest_error_mode;
+}
+
+=head3 rest_error_mode()
+
+Example 1:
+
+    $self->rest_error_mode('my_error_mode');
+    my $em = $self->rest_error_mode; # $em equals 'my_error_mode'.
+
+This function gets or sets the run mode which is called if an error occurs
+during the dispatch process.  In this run mode, you can do whatever error
+processing or clean up is needed by your application.
+
+If no error mode is defined, the start mode will be returned.
+
+=cut
+
+sub rest_error_mode {
+    my ( $self, $error_mode ) = @_;
+
+    # First use?  Create new __rest_error_mode
+    if ( !exists( $self->{'__rest_error_mode'} ) ) {
+        $self->{'__rest_error_mode'} = $self->start_mode;
+    }
+
+    # If data is provided, set it.
+    if ( defined $error_mode ) {
+        $self->{'__rest_error_mode'} = $error_mode;
+        $self->run_modes( [$error_mode] );
+    }
+
+    return $self->{'__rest_error_mode'};
 }
 
 =head3 rest_route()

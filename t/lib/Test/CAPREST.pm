@@ -8,6 +8,7 @@ sub setup {
     my ($self) = @_;
 
     $self->run_modes([ 'default' ]);
+    $self->rest_error_mode('error');
     $self->start_mode('default');
 
     if (defined $self->query->param('bogusdispatch')) {
@@ -74,6 +75,15 @@ sub default {
     my $q = $self->query;
 
     return $q->start_html('default') .
+           $q->end_html;
+}
+
+sub error {
+    my ($self) = @_;
+
+    my $q = $self->query;
+
+    return $q->start_html('error') .
            $q->end_html;
 }
 
