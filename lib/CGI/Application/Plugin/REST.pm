@@ -202,16 +202,16 @@ sub _rest_dispatch {
 
 =head3 rest_error_mode()
 
-Example 1:
-
-    $self->rest_error_mode('my_error_mode');
-    my $em = $self->rest_error_mode; # $em equals 'my_error_mode'.
-
 This function gets or sets the run mode which is called if an error occurs
 during the dispatch process.  In this run mode, you can do whatever error
 processing or clean up is needed by your application.
 
 If no error mode is defined, the start mode will be returned.
+
+Example 1:
+
+    $self->rest_error_mode('my_error_mode');
+    my $em = $self->rest_error_mode; # $em equals 'my_error_mode'.
 
 =cut
 
@@ -564,6 +564,11 @@ your bug as I make changes.
 =item * L<CGI::Application>:
 
 The application framework this module plugs into.
+
+=item * L<REST::Utils>:
+
+L<CGI::Application::Plugin::REST> uses my L<REST::Utils> module behind the
+scenes.
 
 =item * L<REST::Application>:
 
