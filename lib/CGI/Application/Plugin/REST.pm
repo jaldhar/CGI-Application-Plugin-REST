@@ -183,13 +183,13 @@ sub _rest_dispatch {
                 $q->param( "$k", $named_args{$k} );
             }
 
-            $self->{'__r_params '} = {
-                'parsed_params: ' => \%named_args,
-                'path_received: ' => $path,
-                'rule_matched: '  => $rule,
-                'runmode: '       => $rm_name,
-                'method'          => $method,
-                'mimetype'        => $preferred,
+            $self->{'__r_params'} = {
+                'parsed_params' => \%named_args,
+                'path_received' => $path,
+                'rule_matched'  => $rule,
+                'runmode'       => $rm_name,
+                'method'        => $method,
+                'mimetype'      => $preferred,
             };
 
             return $rm_name;
