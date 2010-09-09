@@ -88,7 +88,7 @@ sub _rest_dispatch {
     # get the module name from the table
     if ( !exists $self->{'__rest_dispatch_table'} ) {
         $self->header_add( -status => '400 No Dispatch Table' );
-        return $self->rest_error_mode;
+        return rest_error_mode($self);
     }
 
     # look at each rule and stop when we get a match
@@ -97,7 +97,7 @@ sub _rest_dispatch {
 
         # $rule will be transformed later so save the original form first.
         my $key = $rule;
-        $rule = $self->rest_route_prefix . $rule;
+        $rule = rest_route_prefix($self) . $rule;
 
         # translate the rule into a regular expression, but remember where
         # the named args are.
@@ -140,7 +140,7 @@ sub _rest_dispatch {
                     -status => "405 Method '$method' Not Allowed",
                     -allow  => ( join q{, }, sort keys %{$table} ),
                 );
-                return $self->rest_error_mode;
+                return rest_error_mode($self);
             }
 
             # then check MIME media type
@@ -148,7 +148,7 @@ sub _rest_dispatch {
             my $preferred = media_type( $q, \@types );
             if ( !defined $preferred ) {
                 $self->header_add( -status => '415 Unsupported Media Type' );
-                return $self->rest_error_mode;
+                return rest_error_mode($self);
             }
             if ( $preferred eq q{} ) {
                 $preferred = q{*/*};
@@ -165,7 +165,7 @@ sub _rest_dispatch {
             if ( !defined $sub ) {
                 $self->header_add( -status =>
                       "501 Method '$method' Not Implemented by $rm_name" );
-                return $self->rest_error_mode;
+                return rest_error_mode($self);
             }
 
             $self->param( 'rm', $rm_name );
@@ -197,7 +197,7 @@ sub _rest_dispatch {
     }
 
     $self->header_add( -status => '404 No Route Found' );
-    return $self->rest_error_mode;
+    return rest_error_mode($self);
 }
 
 =head3 rest_error_mode()
