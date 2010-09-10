@@ -46,7 +46,7 @@ This plugin contains a number of functions to support the various REST
 concepts. They try to use existing L<CGI::Application> functionality
 wherever possible.
 
-C<use>'ing this plugin will intercept L<CGI::Application>s' standard dispatch
+C<use>'ing this plugin will intercept L<CGI::Application>'s standard dispatch
 mechanism.  Instead of being selected based on a query parameter like C<rm>,
 the run mode will be determined by the C<PATH_INFO> information in the
 request URI.  (Referred from here on, as a "route".)  This is done via
@@ -284,7 +284,7 @@ sub rest_error_mode {
 
 =head3 rest_route()
 
-When This function is given a hash or hashref, it configures the mapping of
+When this function is given a hash or hashref, it configures the mapping of
 routes to handlers (run modes within your L<CGI::Application>).
 
 It returns the map of routes and handlers.
@@ -345,7 +345,7 @@ Example 3: a wild card route
 
 If the route specification contains /*/, everything in that segment will be
 put into the special parameter 'dispatch_uri_remainder' which you can retrieve
-with C<"rest_param()"> just like any other parameter.  Only one wildcard can
+with L<rest_param()> just like any other parameter.  Only one wildcard can
 be specified per route.  Given the request URI
 http://localhost/baz/string/good, C<rest_param('dispatch_uri_remainder')>
 would return 'good', with http://localhost/baz/string/evil it would return
@@ -368,7 +368,7 @@ Example 4: Basic Handlers
 In example 4, a request to C<http://localhost/app/foo> will be dispatched to
 C<wibble()>.  (It is upto you to make sure such a method exists.)  A request
 to C<http://localhost/app/bar/jaldhar/76/jaldhar@braincells.com> will dispatch 
-to C<wobble()>.  A request to http://localhost/login will raise an error.
+to C<wobble()>.  A request to C<http://localhost/login> will raise an error.
 
 Example 5: More complex handlers
 
@@ -398,9 +398,9 @@ can also be * which matches all methods not explicitly specified.  If a valid
 method cannot be matched, an error is raised and the HTTP status of the
 response is set to 405.  (See L<"DIAGNOSTICS">)
 
-In example 5, a GET request to http://localhost/quux will be dispatched to
-C<ptang()>.  A DELETE to http://localhost/quux will dispatch to C<krrang()>.
-A POST, PUT or HEAD will cause an error.
+In example 5, a C<GET> request to http://localhost/quux will be dispatched to
+C<ptang()>.  A C<DELETE> to http://localhost/quux will dispatch to C<krrang()>.
+A C<POST>, C<PUT> or C<HEAD> will cause an error.
 
 A C<POST> request to http://localhost/edna will dispatch to C<zip()>
 while any other type of request to that URL will dispatch to C<blop()>
@@ -415,8 +415,8 @@ response is set to 415.  (See L<"DIAGNOSTICS">)
 In example 5, a C<GET> request to http://localhost/grudnuk with MIME
 media type application/xml will dispatch to C<zip()>. If the same request is
 made with any other MIME media type, the method C<zap()> will be called
-instead. A C <PUT> request made to the same URL with MIME media type
-application/xml will dispatch to C <zoom()>. Any other combination of HTTP
+instead. A C<PUT> request made to the same URL with MIME media type
+application/xml will dispatch to C<zoom()>. Any other combination of HTTP
 methods or MIME media types will cause an error to be raised.
 
 If no URI can be matched, an error is raised and the HTTP status of the
@@ -525,6 +525,7 @@ Use this function to set a prefix for routes to avoid unnecessary repetition
 when you have a number of similar ones.
 
 Example 1:
+
     # matches requests to /zing
     $self->rest_route(
          '/zing' => {
@@ -562,14 +563,15 @@ sub rest_route_prefix {
 =head1 DIAGNOSTICS
 
 During the dispatch process, errors can occur in certain circumstances. If an
-error occurs the appropriate HTTP status Here is a list of status codes and
+error occurs the appropriate HTTP status is set and execution passes to the
+run mode set by L<"rest_error_mode()">.  Here is a list of status codes and
 messages.
 
 =over 4
 
 =item * 400 No Dispatch Table
 
-This error can occur if L<"rest_route()"> was not called.
+This error can occur if L<rest_route()> was not called.
 
 =item * 404 No Route Found
 
@@ -577,7 +579,7 @@ None of the specified routes matched the request URI.
 
 =item * 405 Method '$method' Not Allowed
 
-The route you specified with L<"rest_route()"> does not allow this HTTP
+The route you specified with L<rest_route()> does not allow this HTTP
 request method.  An HTTP C<Allow> header is added to the response specifying
 which methods can be used.
 
@@ -592,7 +594,7 @@ The function that was called for this run_mode C<die>'d somewhere.
 
 =item * 501 Function Doesn't Exist
 
-The function that you wanted to call from L<"rest_route()"> for this run_mode
+The function that you wanted to call from L<rest_route()> for this run_mode
 doesn't exist in your application.
 
 =back
