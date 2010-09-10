@@ -74,7 +74,57 @@ sub import {
             return;
         }
     );
+    if ( exists $ENV{'CAP_DEVPOPUP_EXEC'} ) {
+        $caller->add_callback( 'devpopup_report', \&_rest_devpopup );
+    }
     goto &Exporter::import;
+}
+
+# Callback for CGI::Application::Plugin::DevPopup which provides debug info.
+#
+sub _rest_devpopup {
+    my ( $self, $outputref ) = @_;
+
+    my $report = "<table>\n";
+    foreach my $key ( sort keys %{ $self->{'__r_params'} } ) {
+        my $name = $key;
+        $name =~ s/_/ /gmsx;
+
+        # This bit is complicated but necessary as parsed_params needs a
+        # nested table.
+        if ( $key eq 'parsed_params' ) {
+            my @params = sort keys %{ $self->{'__r_params'}->{$key} };
+            my $rows   = scalar @params;
+            $report .= qq{<tr><td rowspan="$rows">$name: </td>};
+            foreach my $param (@params) {
+                if ( $param ne $params[0] ) {
+                    $report .= '<tr>';
+                }
+                $report .= join q{},
+                  (
+                    qq{<td>$param: </td><td>},
+                    $self->{'__r_params'}->{$key}->{$param},
+                    "</td></tr>\n"
+                  );
+            }
+        }
+        else {
+            $report .= join q{},
+              (
+                "<tr><td>$name: </td>",        '<td colspan="2">',
+                $self->{'__r_params'}->{$key}, "</td></tr>\n"
+              );
+        }
+    }
+    $report .= "</table>\n";
+
+    $self->devpopup->add_report(
+        title   => 'CGI::Application::Plugin::REST',
+        summary => 'Information on the current REST dispatch',
+        report  => $report,
+    );
+
+    return;
 }
 
 # prerun hook to set the run mode based on the request URI.

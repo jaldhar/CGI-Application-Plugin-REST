@@ -11,6 +11,7 @@ my $builder = Module::Build->new(
     dist_version_from   => 'lib/CGI/Application/Plugin/REST.pm',
     build_requires => {
         'Test::WWW::Mechanize::CGIApp'  => 0,
+        'Test::LongString'              => 0,
     },
     requires => {
         'perl'                          => 5.008,
@@ -22,4 +23,3 @@ my $builder = Module::Build->new(
 );
 
 $builder->create_build_script();
-
