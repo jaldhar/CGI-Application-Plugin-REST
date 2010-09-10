@@ -46,11 +46,12 @@ This module is pure perl and should work with any version of perl, 5.008 or
 greater.  It requires these other modules from CPAN:
 
 CGI::Application    4.04
-REST-Utils
+REST-Utils          0.4
 
 At build time you will need the above modules plus the following if you want
 to run the tests:
 
+Test::LongString
 Test::WWW::Mechanize::CGIApp
 
 The signature can be tested by installing the following module:
