@@ -16,6 +16,7 @@ my $builder = Module::Build->new(
     requires => {
         'perl'                          => 5.008,
         'CGI::Application'              => 4.04,
+        'REST::Utils'                   => 0.4.
     },
     add_to_cleanup      => [ 'CGI-Application-Plugin-REST-*' ],
     create_makefile_pl  => 'traditional',
