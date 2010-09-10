@@ -127,7 +127,7 @@ sub _rest_devpopup {
     return;
 }
 
-# prerun hook to set the run mode based on the request URI.
+# mode_param() callback to set the run mode based on the request URI.
 #
 sub _rest_dispatch {
     my ($self) = @_;
