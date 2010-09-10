@@ -39,7 +39,7 @@ our %EXPORT_TAGS = ( 'all' => [@EXPORT_OK] );
 
 REST stands for REpresentational State Transfer. It is an architecture for web
 applications that tries to leverage the existing infrastructure of the World
-Wide Web such as URIs. MIME media types and HTTP instead of building up
+Wide Web such as URIs, MIME media types, and HTTP instead of building up
 protocols and functions on top of them.
 
 This plugin contains a number of functions to support the various REST
