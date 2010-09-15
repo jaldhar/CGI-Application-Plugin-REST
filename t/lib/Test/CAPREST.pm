@@ -50,7 +50,7 @@ sub setup {
         };
         $self->rest_route($routes);
         $self->rest_route(
-            '/baz/string/*/'          => 'woop',
+            '/baz/string/*'           => 'woop',
             '/quux'                   => {
                 'GET'    => 'ptang',
                 'DELETE' => 'krrang',
@@ -120,7 +120,7 @@ sub woop {
 
     my $q = $self->query;
 
-    my $title = $q->param('dispatch_url_remainder');
+    my $title = $q->param('dispatch_uri_remainder');
     return $q->start_html($title) .
            $q->end_html;
 }

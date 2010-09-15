@@ -156,18 +156,17 @@ sub _rest_dispatch {
         # '/:bar?' will become '/?([^\/]*)?'
         # and then remember which position it matches
         $rule =~ s{
-                        (^|/)                 # beginning or a /
-                        (:([^/\?]+)(\?)?)     # stuff in between
+                        (^ | /)                 # beginning or a /
+                        (: ([^/\?]+) (\?)?)     # stuff in between
                 }{
                         push(@names, $3);
-                        $1 . ($4 ? '?([^/]*)?' : '([^/]*)')
+                        $1 . ( $4 ? '?( [^/]* )?' : '([^/]*)')
                 }egsmx;
 
-        # '/*/' will become '/(.*)/$' the end / is added to the end of
-        # both $rule and $path elsewhere
-        if ( $rule =~ m{/\*/$}msx ) {
-            $rule =~ s{/\*/$}{/(.*)/\$}msx;
-            push @names, 'dispatch_url_remainder';
+        # '/*' onwards will become '(.*)\$'
+        if ( $rule =~ m{/\* .* $}msx ) {
+            $rule =~ s{(/\* .* )$}{/(.*)\$}msx;
+            push @names, 'dispatch_uri_remainder';
         }
 
         # if we found a match, then run with it
@@ -341,16 +340,16 @@ actually be an email address, it is up to your code to validate it before use.
 
 Example 3: a wild card route
 
-    /baz/string/*/
+    /baz/string/*
 
-If the route specification contains /*/, everything in that segment will be
+If the route specification contains /*, everything from then on will be
 put into the special parameter 'dispatch_uri_remainder' which you can retrieve
 with L<rest_param()> just like any other parameter.  Only one wildcard can
 be specified per route.  Given the request URI
 http://localhost/baz/string/good, C<rest_param('dispatch_uri_remainder')>
 would return 'good', with http://localhost/baz/string/evil it would return
-'evil' and with http://localhost/baz/string/lawful-neutral it would return
-'lawful-neutral'.
+'evil' and with http://localhost/baz/string/lawful/neutral/ it would return
+'lawful/neutral/'.
 
 =head4 Handlers
 

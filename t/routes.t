@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );
-use Test::More tests => 22;
+use Test::More tests => 23;
 use Test::WWW::Mechanize::CGIApp;
 use lib 't/lib';
 use Test::CAPREST;
@@ -43,11 +43,14 @@ ok(defined $EVAL_ERROR, 'incomplete dispatch table');
 $mech->get('http://localhost/bogus/mark/76/mark@stosberg.com');
 is($mech->status, 404, 'non-existent route');
 
-$mech->get('http://localhost/baz/string/good/');
+$mech->get('http://localhost/baz/string/good');
 $mech->title_is('good', 'route with a wildcard parameter');
 
-$mech->get('http://localhost/baz/string/evil/');
-$mech->title_is('evil', 'route with a a different wildcard parameter');
+$mech->get('http://localhost/baz/string/evil');
+$mech->title_is('evil', 'route with a different wildcard parameter');
+
+$mech->get('http://localhost/baz/string/lawful/neutral/');
+$mech->title_is('lawful/neutral/', 'route with a wildcard parameter containing / ');
 
 $mech->get('http://localhost/quux');
 $mech->title_is('8', 'rest_route return value');
