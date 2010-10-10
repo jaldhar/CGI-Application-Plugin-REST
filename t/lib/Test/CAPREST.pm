@@ -109,8 +109,8 @@ sub wobble {
 
     my $q = $self->query;
 
-    my $title = join q{ }, ($q->param('email'), $q->param('name'),
-        $q->param('id'));
+    my $title = join q{ }, ($self->rest_param('email'),
+        $self->rest_param('name'), $self->rest_param('id'));
     return $q->start_html($title) .
            $q->end_html;
 }
@@ -120,7 +120,7 @@ sub woop {
 
     my $q = $self->query;
 
-    my $title = $q->param('dispatch_uri_remainder');
+    my $title = $self->rest_param('dispatch_uri_remainder');
     return $q->start_html($title) .
            $q->end_html;
 }

@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );
-use Test::LongString;
+use Test::LongString max => 5000;
 use Test::More tests => 2;
 use Test::WWW::Mechanize::CGIApp;
 use lib 't/lib';
@@ -25,12 +25,12 @@ my $expected1 = <<'EOT';
 <table>\n" + 
 	"<tr><td>method: </td><td colspan=\"2\">GET</td></tr>\n" + 
 	"<tr><td>mimetype: </td><td colspan=\"2\">*/*</td></tr>\n" + 
-	"<tr><td rowspan=\"3\">parsed params: </td><td>one: </td><td>alpha</td></tr>\n" + 
-	"<tr><td>three: </td><td>gamma</td></tr>\n" + 
-	"<tr><td>two: </td><td>beta</td></tr>\n" + 
 	"<tr><td>path received: </td><td colspan=\"2\">/foo/alpha/beta/gamma/</td></tr>\n" + 
 	"<tr><td>rule matched: </td><td colspan=\"2\">/foo/([^/]*)/([^/]*)/([^/]*)/</td></tr>\n" + 
 	"<tr><td>runmode: </td><td colspan=\"2\">doop</td></tr>\n" + 
+	"<tr><td rowspan=\"3\">parameters: </td><td>one: </td><td>alpha</td></tr>\n" + 
+	"<tr><td>three: </td><td>gamma</td></tr>\n" + 
+	"<tr><td>two: </td><td>beta</td></tr>\n" + 
 	"</table>\n" + 
 EOT
 

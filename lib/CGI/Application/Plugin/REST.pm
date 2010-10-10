@@ -31,7 +31,7 @@ This document describes CGI::Application::Plugin::REST Version 0.1
 
 our $VERSION = '0.1';
 
-our @EXPORT_OK = qw/ rest_error_mode rest_route rest_route_prefix /;
+our @EXPORT_OK = qw/ rest_error_mode rest_param rest_route rest_route_prefix /;
 
 our %EXPORT_TAGS = ( 'all' => [@EXPORT_OK] );
 
@@ -89,32 +89,28 @@ sub _rest_devpopup {
     foreach my $key ( sort keys %{ $self->{'__r_params'} } ) {
         my $name = $key;
         $name =~ s/_/ /gmsx;
+        $report .= join q{},
+          (
+            "<tr><td>$name: </td>",        '<td colspan="2">',
+            $self->{'__r_params'}->{$key}, "</td></tr>\n"
+          );
+    }
 
-        # This bit is complicated but necessary as parsed_params needs a
-        # nested table.
-        if ( $key eq 'parsed_params' ) {
-            my @params = sort keys %{ $self->{'__r_params'}->{$key} };
-            my $rows   = scalar @params;
-            $report .= qq{<tr><td rowspan="$rows">$name: </td>};
-            foreach my $param (@params) {
-                if ( $param ne $params[0] ) {
-                    $report .= '<tr>';
-                }
-                $report .= join q{},
-                  (
-                    qq{<td>$param: </td><td>},
-                    $self->{'__r_params'}->{$key}->{$param},
-                    "</td></tr>\n"
-                  );
-            }
+    # This bit is complicated but necessary as rest_param needs a
+    # nested table.
+    my @params = rest_param($self);
+    my $rows   = scalar @params;
+    $report .= qq{<tr><td rowspan="$rows">parameters: </td>};
+    foreach my $param (@params) {
+        if ( $param ne $params[0] ) {
+            $report .= '<tr>';
         }
-        else {
-            $report .= join q{},
-              (
-                "<tr><td>$name: </td>",        '<td colspan="2">',
-                $self->{'__r_params'}->{$key}, "</td></tr>\n"
-              );
-        }
+        $report .= join q{},
+          (
+            qq{<td>$param: </td><td>},
+            rest_param( $self, $param ),
+            "</td></tr>\n"
+          );
     }
     $report .= "</table>\n";
 
@@ -219,21 +215,14 @@ sub _rest_dispatch {
 
             $self->param( 'rm', $rm_name );
 
-            #$self->routes_params(@names);
             my %named_args;
 
             if (@names) {
                 @named_args{@names} = @values;
-            }
-
-            # force params into $self->query. NOTE that it will overwrite
-            # any existing param with the same name
-            foreach my $k ( keys %named_args ) {
-                $q->param( "$k", $named_args{$k} );
+                rest_param( $self, %named_args );
             }
 
             $self->{'__r_params'} = {
-                'parsed_params' => \%named_args,
                 'path_received' => $path,
                 'rule_matched'  => $rule,
                 'runmode'       => $rm_name,
@@ -281,6 +270,84 @@ sub rest_error_mode {
     return $self->{'__rest_error_mode'};
 }
 
+=head3 rest_param()
+
+The C<rest_param> function is used to retrieve or set named parameters
+defined by the L<rest_route()> function. it can be called in three ways.
+
+=over 4
+
+=item with no arguments.
+
+Returns a sorted list of the defined parameters in list context or the number
+of defined parameters in scalar context.
+
+    my @params     = $self->rest_param();
+    my $num_params = $self->rest_param();
+
+=item with a single scalar argument.
+
+The value of the parameter with the name of the argument will be returned.
+
+    my $color = $self->rest_param('color');
+
+=item with named arguments
+
+Although you will mostly use this function to retrieve parameters, they can
+also be set for one or more sets of  keys and values.
+
+    $self->rest_param(filename => 'logo.jpg', height => 50, width => 100);
+
+You could also use a hashref.
+
+    my $arg_ref = { filename => 'logo.jpg', height => 50, width => 100 };
+    $self->rest_param($arg_ref);
+
+The value of a parameter need not be a scalar, it could be any any sort of
+reference even a coderef.
+
+    $self->rest_param(number => &pick_a_random_number);
+
+In this case, the function does not return anything.
+
+=back
+
+=cut
+
+sub rest_param {
+    my ( $self, @args ) = @_;
+
+    if ( !exists $self->{'__rest_params'} ) {
+        $self->{'__rest_params'} = {};
+    }
+
+    my $num_args = scalar @args;
+    if ($num_args) {
+        if ( ref $args[0] eq 'HASH' ) {    # a hashref
+            %{ $self->{'__rest_params'} } =
+              ( %{ $self->{'__rest_params'} }, %{ $args[0] } );
+        }
+        elsif ( $num_args % 2 == 0 ) {     # a hash
+            %{ $self->{'__rest_params'} } =
+              ( %{ $self->{'__rest_params'} }, @args );
+        }
+        elsif ( $num_args == 1 ) {         # a scalar
+            if ( exists $self->{'__rest_params'}->{ $args[0] } ) {
+                return $self->{'__rest_params'}->{ $args[0] };
+            }
+        }
+        else {
+            croak('Odd number of arguments passed to rest_param().');
+        }
+    }
+    else {
+        return wantarray
+          ? sort keys %{ $self->{'__rest_params'} }
+          : scalar keys %{ $self->{'__rest_params'} };
+    }
+    return;
+}
+
 =head3 rest_route()
 
 When this function is given a hash or hashref, it configures the mapping of
@@ -318,8 +385,8 @@ Example 2: a more complex route
 If a segment of a route is prefixed with a :, it is not matched literally but
 treated as a parameter name.  The value of the parameter is whatever actually
 got matched.  If the segment ends with a ?, it is optional otherwise it is
-required.  The values of these named paramaters can be retrieved with the
-C<rest_param()> method.
+required.  The values of these named parameters can be retrieved with the
+L<rest_param()> method.
 
 In example 2, http://localhost/bar/jaldhar/76/jaldhar@braincells.com would
 match.  C<rest_param('name')> would return 'jaldhar',  C<rest_param('id')>
