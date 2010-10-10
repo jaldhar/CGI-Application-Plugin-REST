@@ -1,0 +1,182 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+	<title>jaldhar/CGI-Application-Plugin-REST @ GitHub</title>
+	
+	<style type="text/css">
+		body {
+  		margin-top: 1.0em;
+  		background-color: black;
+		  font-family: "Helvetica,Arial,FreeSans";
+  		color: white;
+    }
+    #container {
+      margin: 0 auto;
+      width: 700px;
+    }
+		h1 { font-size: 3.8em; color: white; margin-bottom: 3px; }
+		h1 .small { font-size: 0.4em; }
+		h1 a { text-decoration: none }
+		h2 { font-size: 1.5em; color: white; }
+    h3 { text-align: center; color: white; }
+    a { color: #4df1bd; }
+    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
+    .download { float: right; }
+		pre { background: #222222; color: white; padding: 15px;}
+    hr { border: 0; width: 80%; border-bottom: 1px solid #363636}
+    .footer { text-align:center; padding-top:30px; font-style: italic; }
+	</style>
+	
+</head>
+
+<body>
+  <a href="http://github.com/jaldhar/CGI-Application-Plugin-REST"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+
+  <div id="container">
+
+    <div class="download">
+      <a href="http://github.com/jaldhar/CGI-Application-Plugin-REST/zipball/master">
+        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
+      <a href="http://github.com/jaldhar/CGI-Application-Plugin-REST/tarball/master">
+        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
+    </div>
+
+    <h1><a href="http://github.com/jaldhar/CGI-Application-Plugin-REST">CGI-Application-Plugin-REST</a>
+      <span class="small">by <a href="http://github.com/jaldhar">jaldhar</a></span></h1>
+
+    <div class="description">
+      Helps implement RESTful architecture in Perl CGI applications
+    </div>
+    <p>If you use the CGI::Application framework, this plugin will help you create a 
+RESTful (that's the common term for "using REST") architecture by abstracting 
+out a lot of the busy work needed to make it happen.</p>
+
+<h2>Dependencies</h2>
+<p>This module is pure perl and should work with any version of perl, 5.008 or 
+greater.</p>
+<ul>
+<li>CGI::Application    4.04</li>
+<li>REST-Utils          0.4</li>
+</ul>
+<p>At build time you will need the above modules plus the following if you want
+to run the tests:</p>
+<ul>
+<li>Test::LongString</li>
+<li>Test::WWW::Mechanize::CGIApp</li>
+</ul>
+<p>The signature can be tested by installing the following module:</p>
+<ul>
+<li>Module::Signature</li>
+</ul>
+<p>and setting the environment variable TEST_SIGNATURE to 1.</p>
+
+<p>Further tests are contained in the xt subdirectory of the distribution.  Only
+the author really needs to run them but if you want to do so as well, you 
+will need to install the following modules:</p>
+<ul>
+<li>Perl::Critic           1.098</li>
+<li>Perl::MinimumVersion   1.20</li>
+<li>Pod::Coverage          0.18</li>
+<li>Pod::Simple            3.07</li>
+<li>Test::CPAN::Meta       0.12</li>
+<li>Test::DistManifest     1.003</li>
+<li>Test::HasVersion       0.012</li>
+<li>Test::Kwalitee</li>
+<li>Test::MinimumVersion   0.008</li>
+<li>Test::Perl::Critic     1.01</li>
+<li>Test::Pod              1.26</li>
+<li>Test::Pod::Coverage    1.08</li>
+</ul>
+<h2>Install</h2>
+<p>If you have the Module::Signature module installed, you can verify the
+integrity of this distribution by typing:<p>
+
+<pre><code>
+    cpansign -v
+</code></pre>
+
+<p>Module::Signature requires GnuPG which you can get from: 
+<a href="http://www.gnupg.org/download/">http://www.gnupg.org/download/</a>
+A binary version for Windows is available from that page.</p>
+        
+<p>Then to install this module, run the following commands:</p>
+
+<pre><code>
+    perl Build.pl
+    ./Build
+    ./Build test
+    ./Build install
+</code></pre>
+    
+<p>On Windows you don't need to type the preliminary ./</p>
+
+<p>Alternatively, you can do:</p>
+
+<pre><code>
+    perl Makefile.PL
+    make
+    make test
+    make install
+</code></pre>
+
+<p>If you are using ActiveState perl on Windows and you don't have a make 
+utility, you can download nmake from:<br />
+<a href="http://download.microsoft.com/download/vc15/patch/1.52/w95/en-us/nmake15.exe">http://download.microsoft.com/download/vc15/patch/1.52/w95/en-us/nmake15.exe</a><p>
+
+<p>(Replace make with nmake in the instructions above if you are using it.)</p>
+
+<p>If you are using Strawberry perl on Windows, it comes with a make utility 
+called dmake.  (Replace make with dmake in the instructions above if you are
+using it.)</p>
+
+<h2>License</h2>
+<p>Copyright (C) 2010, Consolidated Braincells Inc.  All rights reserved.</p>
+
+<p>This distribution is free software; you can redistribute it and/or modify it
+under the terms of either:</p>
+
+<p>a) the GNU General Public License as published by the Free Software
+Foundation; either version 2, or (at your option) any later version, or</p>
+
+<p>b) the Artistic License version 2.0.</p>
+
+<p>The full text of the license can be found in the LICENSE file included
+with this distribution.</p>
+<h2>Authors</h2>
+<p>Jaldhar H. Vyas (jaldhar@braincells.com)<br/><br/>      </p>
+<h2>Contact</h2>
+<p>Jaldhar H. Vyas (jaldhar@braincells.com)<br/>      </p>
+
+
+    <h2>Download</h2>
+    <p>
+      You can download this project in either
+      <a href="http://github.com/jaldhar/CGI-Application-Plugin-REST/zipball/master">zip</a> or
+      <a href="http://github.com/jaldhar/CGI-Application-Plugin-REST/tarball/master">tar</a> formats.
+    </p>
+    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
+      by running:
+      <pre><code>$ git clone git://github.com/jaldhar/CGI-Application-Plugin-REST</code></pre>
+    </p>
+
+    <div class="footer">
+      get the source code on GitHub : <a href="http://github.com/jaldhar/CGI-Application-Plugin-REST">jaldhar/CGI-Application-Plugin-REST</a>
+    </div>
+
+  </div>
+
+  <script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-12216159-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+</body>
+</html>
