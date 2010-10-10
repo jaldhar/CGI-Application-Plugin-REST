@@ -21,6 +21,12 @@ my $builder = Module::Build->new(
     add_to_cleanup      => [ 'CGI-Application-Plugin-REST-*' ],
     create_makefile_pl  => 'traditional',
     sign                => 1,
+    meta_merge => {
+            resources => {
+                repository  => 'http://github.com/jaldhar/CGI-Application-Plugin-REST',
+                homepage    => 'http://jaldhar.github.com/CGI-Application-Plugin-REST',
+            },
+    },
 );
 
 $builder->create_build_script();
