@@ -51,6 +51,7 @@ REST-Utils          0.4
 At build time you will need the above modules plus the following if you want
 to run the tests:
 
+CGI::Application::Plugin::DevPopup
 Test::LongString
 Test::WWW::Mechanize::CGIApp
 
