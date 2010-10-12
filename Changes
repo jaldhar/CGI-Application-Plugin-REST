@@ -1,5 +1,9 @@
 Revision history for CGI-Application-Plugin-REST
 
+0.11    Mon Oct 11 21:33:30 EDT 2010
+        Added C::A::P::DevPopup to the build requirements as it is
+        needed for t/devpopup.t.
+
 0.1     Sun Oct 10 04:57:56 EDT 2010
         First version, released on an unsuspecting world.
 

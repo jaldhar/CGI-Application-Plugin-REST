@@ -7,6 +7,7 @@ WriteMakefile
           'VERSION_FROM' => 'lib/CGI/Application/Plugin/REST.pm',
           'PREREQ_PM' => {
                            'CGI::Application' => '4.04',
+                           'CGI::Application::Plugin::DevPopup' => 0,
                            'REST::Utils' => '0.4',
                            'Test::LongString' => 0,
                            'Test::WWW::Mechanize::CGIApp' => 0

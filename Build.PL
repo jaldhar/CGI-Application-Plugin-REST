@@ -8,10 +8,12 @@ my $builder = Module::Build->new(
     dist_abstract       => 'Helps implement RESTful architecture in CGI applications',
     dist_author         => 'Jaldhar H. Vyas <jaldhar@braincells.com>',
     license             => 'perl',
-    dist_version_from   => 'lib/CGI/Application/Plugin/REST.pm',
+    dist_version        => 0.11,
+    #dist_version_from   => 'lib/CGI/Application/Plugin/REST.pm',
     build_requires => {
-        'Test::WWW::Mechanize::CGIApp'  => 0,
-        'Test::LongString'              => 0,
+        'CGI::Application::Plugin::DevPopup' => 0,
+        'Test::WWW::Mechanize::CGIApp'       => 0,
+        'Test::LongString'                   => 0,
     },
     requires => {
         'perl'                          => 5.008,

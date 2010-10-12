@@ -3,6 +3,7 @@ abstract: 'Helps implement RESTful architecture in CGI applications'
 author:
   - 'Jaldhar H. Vyas <jaldhar@braincells.com>'
 build_requires:
+  CGI::Application::Plugin::DevPopup: 0
   Test::LongString: 0
   Test::WWW::Mechanize::CGIApp: 0
 configure_requires:
@@ -25,4 +26,4 @@ resources:
   homepage: http://jaldhar.github.com/CGI-Application-Plugin-REST
   license: http://dev.perl.org/licenses/
   repository: http://github.com/jaldhar/CGI-Application-Plugin-REST
-version: 0.1
+version: 0.11
