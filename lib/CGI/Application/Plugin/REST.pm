@@ -456,7 +456,7 @@ Example 5: More complex handlers
                 'application/xml' => 'zoom',
             },
         },
-    }
+    );
 
 If the handler is a hashref, the keys of the second-level hash are HTTP
 methods and the values if scalars or coderefs, are run modes.  The key
