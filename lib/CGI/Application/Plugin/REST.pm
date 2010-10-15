@@ -31,7 +31,8 @@ This document describes CGI::Application::Plugin::REST Version 0.1
 
 our $VERSION = '0.1';
 
-our @EXPORT_OK = qw/ rest_error_mode rest_param rest_route rest_route_prefix /;
+our @EXPORT_OK =
+  qw/ rest_error_mode rest_param rest_resource rest_route rest_route_prefix /;
 
 our %EXPORT_TAGS = ( 'all' => [@EXPORT_OK] );
 
@@ -48,10 +49,16 @@ wherever possible.
 
 C<use>'ing this plugin will intercept L<CGI::Application>'s standard dispatch
 mechanism.  Instead of being selected based on a query parameter like C<rm>,
-the run mode will be determined by the C<PATH_INFO> information in the
-request URI.  (Referred from here on, as a "route".)  This is done via
-overriding L<CGI::Application>'s C<mode_param()> function so it should be
-compatible with other L<CGI::Application> plugins.
+the run mode will be determined by comparing URI patterns defined in your app
+with the L<rest_route()> method.  (Referred from here on, as "routes".)
+Optionally, specific HTTP methods or MIME media types can be defined in a
+route too.  One by one, each entry in the reverse asciibetically sorted table
+of defined routes is compared to the incoming HTTP request and the first
+successful match is selected.  The run mode mapped to that route is then
+called.
+
+This is done via overriding L<CGI::Application>'s C<mode_param()> function so
+it should be compatible with other L<CGI::Application> plugins.
 
 =head1 FUNCTIONS
 
@@ -138,7 +145,8 @@ sub _rest_dispatch {
     }
 
     # look at each rule and stop when we get a match
-    foreach my $rule ( keys %{ $self->{'__rest_dispatch_table'} } ) {
+    foreach my $rule ( reverse sort keys %{ $self->{'__rest_dispatch_table'} } )
+    {
         my @names = ();
 
         # $rule will be transformed later so save the original form first.
@@ -346,6 +354,264 @@ sub rest_param {
           : scalar keys %{ $self->{'__rest_params'} };
     }
     return;
+}
+
+=head3 rest_resource()
+
+This method will set up a complete REST API for a collection of items with all
+the CRUD (Create, Read, Update, Delete) operations in one call.  A collection
+could be rows in a database, files etc.  The only assumption is that each item
+has a unique identifier.
+
+Example 1: basic usage of rest_resource()
+
+    $self->rest_resource('widget');
+
+is exactly equal to the following invocation of L<rest_route()>:
+
+    $self->rest_route(
+        '/widget'                   => {
+            'GET'    => 'widget_index',
+            'POST'   => 'widget_create',
+        },
+        '/widget/:id'               => {
+            'DELETE' => 'widget_destroy',
+            'GET'    => 'widget_show',
+            'PUT'    => 'widget_update',
+        },
+        '/widget/:id/edit'          => {
+            'GET'    => 'widget_edit',
+        },
+        '/widget/new'               => {
+            'GET'    => 'widget_new',
+        },
+    );
+
+You are responsible for defining the widget_index, widget_create etc. run
+modes in your app.
+
+=over 4
+
+=item *_create
+
+Should be used to add a new item to the collection.
+
+=item *_destroy
+
+Should be used to remove the item with the id C<:id> from the collection.
+
+=item *_edit
+
+Should return a temporary copy of the resource with the id C<:id> which can be
+changed by the user and then sent to C<*_update>.
+
+=item *_index
+
+Should be used to list the resources in the collection.
+
+=item *_new
+
+Should be used to return an input mechanism (such as an HTML form) which can be
+filled in by the user and sent to C<*_create> to add a new resource to the
+collection.
+
+=item *_show
+
+Should be used to display resource with the id C<:id>.
+
+=item *_update
+
+Should be used to alter the existing resource with the id C<:id>.
+
+=back
+
+Various aspects of the generated routes can be customized by passing this
+method a hash (or hashref) of parameters instead of a scalar.
+
+=over 4
+
+=item resource
+
+This parameter is required.  It is used to form the URI the route will match
+to.
+
+HINT: use L<rest_route_prefix> for more complicated URIs.
+
+=item identifier
+
+This parameter sets the name assigned to the unique identifier of an item in
+the collection which is used in some generated routes.  It can be retrieved
+with L<rest_param>.  It defaults to C<id>.
+
+=item prefix
+
+This parameter is prepended to an action to form a run mode name. It defaults
+to C<resource>.
+
+=item in_types, out_types
+
+Both these parameters represent arrayrefs of MIME media types.  C<in_type>
+defines acceptable MIME media types for data incoming to your API (i.e.
+C<POST>S and C<PUT>s) and C<out_type> does the same for outgoing data (i.e.
+C<GET>s.) C<DELETE> requests do not need MIME media types so they are not
+covered.
+
+The reason there are two separate parameters is that typically the number of
+data formats a REST API will serve is different to the number and kind of
+incoming data formats.
+
+Both of these parameters default to '*/*' i.e. any MIME media type is accepted.
+
+=back
+
+Example 2: advanced usage of rest_resource()
+
+    $self->rest_resource(resource => 'fidget', prefix => 'foo',
+        identifier => 'num', in_types => [ 'application/xml' ],
+        out_types => [ 'text/html', 'text/plain' ], );
+
+is equal to the following invocation of L<rest_route()>:
+
+    $self->rest_route(
+        '/fidget'                   => {
+            'GET'    => {
+                'text/html'  => 'foo_index',
+                'text/plain' => 'foo_index',
+            },
+            'POST'   => {
+                'application/xml' => 'foo_create',
+            },
+        },
+        '/fidget/:num'               => {
+            'DELETE' => {
+                '*/*' => 'foo_destroy',
+            },
+            'GET'    => {
+                'text/html'  => 'foo_show',
+                'text/plain' => 'foo_show',
+            },
+            'PUT'    => {
+                'application/xml' => 'foo_update',
+            },
+        },
+        '/fidget/:num/edit'          => {
+            'GET'    => {
+                'text/html'  => 'foo_edit',
+                'text/plain' => 'foo_edit',
+            },
+        },
+        '/fidget/new'               => {
+            'GET'    => {
+                'text/html'  => 'foo_new',
+                'text/plain' => 'foo_new',
+            },
+        },
+    );
+
+If you need more complicated mappings then this, use L<rest_route()>.
+
+L<rest_resource()> returns the map of routes and handlers that was created.
+
+=cut
+
+sub rest_resource {
+    my ( $self, @args ) = @_;
+
+    my ( $resource, $prefix, $id, $in_types, $out_types );
+    my $num_args = scalar @args;
+
+    if ($num_args) {
+        if ( ref $args[0] eq 'HASH' ) {
+            ( $resource, $prefix, $id, $in_types, $out_types ) =
+              _resource_options( $args[0] );
+        }
+        elsif ( $num_args % 2 == 0 ) {    # a hash
+            my %args = @args;
+            ( $resource, $prefix, $id, $in_types, $out_types ) =
+              _resource_options( \%args );
+        }
+        elsif ( $num_args == 1 ) {        # a scalar
+            ( $resource, $prefix, $id, $in_types, $out_types ) =
+              _resource_options( { resource => $args[0] } );
+        }
+    }
+    else {
+        croak "argument must be a scalar, hash, or hashref\n";
+    }
+
+    if ( !$resource ) {
+        croak "Must specify resource name\n";
+    }
+
+    if ( !$prefix ) {
+        $prefix = $resource;
+    }
+
+    if ( !$id ) {
+        $id = 'id';
+    }
+
+    my $routes = {
+        "/$resource" => {
+            'GET'  => _make_resource_route( $prefix . '_index',  $out_types ),
+            'POST' => _make_resource_route( $prefix . '_create', $in_types ),
+        },
+        "/$resource/:$id" => {
+            'DELETE' => _make_resource_route( $prefix . '_destroy', [q{*/*}] ),
+            'GET' => _make_resource_route( $prefix . '_show',   $out_types ),
+            'PUT' => _make_resource_route( $prefix . '_update', $in_types ),
+        },
+        "/$resource/:$id/edit" =>
+          { 'GET' => _make_resource_route( $prefix . '_edit', $out_types ), },
+        "/$resource/new" =>
+          { 'GET' => _make_resource_route( $prefix . '_new', $out_types ), },
+    };
+
+    rest_route( $self, $routes );
+
+    return $routes;
+}
+
+sub _resource_options {
+    my ($args) = @_;
+
+    my ( $resource, $prefix, $id, $in_types, $out_types );
+
+    $resource = $args->{resource};
+    $prefix   = $args->{prefix};
+    $id       = $args->{identifier};
+    if ( exists $args->{in_types} ) {
+        if ( ref $args->{in_types} ne 'ARRAY' ) {
+            croak "in_types must be an arrayref\n";
+        }
+        $in_types = $args->{in_types};
+    }
+    else {
+        $in_types = [q{*/*}];
+    }
+    if ( exists $args->{out_types} ) {
+        if ( ref $args->{out_types} ne 'ARRAY' ) {
+            croak "out_types must be an arrayref\n";
+        }
+        $out_types = $args->{out_types};
+    }
+    else {
+        $out_types = [q{*/*}];
+    }
+
+    return ( $resource, $prefix, $id, $in_types, $out_types );
+}
+
+sub _make_resource_route {
+    my ( $rm, $types ) = @_;
+
+    my $ret = {};
+
+    foreach my $type ( @{$types} ) {
+        $ret->{$type} = $rm;
+    }
+
+    return $ret;
 }
 
 =head3 rest_route()
