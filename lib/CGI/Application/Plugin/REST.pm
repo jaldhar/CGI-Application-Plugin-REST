@@ -358,7 +358,7 @@ sub rest_param {
 
 =head3 rest_resource()
 
-This method will set up a complete REST API for a collection of items with all
+This function will set up a complete REST API for a collection of items with all
 the CRUD (Create, Read, Update, Delete) operations in one call.  A collection
 could be rows in a database, files etc.  The only assumption is that each item
 has a unique identifier.
