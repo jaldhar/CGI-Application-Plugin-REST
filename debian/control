@@ -1,0 +1,18 @@
+Source: libcgi-application-plugin-rest-perl
+Section: perl
+Priority: optional
+Build-Depends: debhelper (>= 7)
+Build-Depends-Indep: libtest-www-mechanize-cgi-perl, libtest-longstring-perl, libcgi-application-basic-plugins-bundle-perl, perl
+Maintainer: Jaldhar H. Vyas <jaldhar@debian.org>
+Standards-Version: 3.9.1
+Homepage: http://search.cpan.org/dist/CGI-Application-Plugin-REST/
+Vcs-git: git://git@github.com:jaldhar/CGI-Application-Plugin-REST.git
+Vcs-Browser: http://github.com/jaldhar/CGI-Application-Plugin-REST
+
+Package: libcgi-application-plugin-rest-perl
+Architecture: all
+Depends: ${misc:Depends}, ${perl:Depends}, librest-utils-perl (>= 0.4-1), perl
+Description: Helps implement RESTful architecture in CGI applications
+ If you use the CGI::Application framework, this plugin will help you create a
+ RESTful (that's the common term for "using REST") architecture by abstracting
+ out a lot of the busy work needed to make it happen.
