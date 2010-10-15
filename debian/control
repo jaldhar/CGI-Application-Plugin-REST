@@ -2,7 +2,7 @@ Source: libcgi-application-plugin-rest-perl
 Section: perl
 Priority: optional
 Build-Depends: debhelper (>= 7)
-Build-Depends-Indep: libtest-www-mechanize-cgi-perl, libtest-longstring-perl, libcgi-application-basic-plugins-bundle-perl, perl
+Build-Depends-Indep: libtest-www-mechanize-cgiapp-perl, libtest-longstring-perl, libcgi-application-basic-plugin-bundle-perl, perl
 Maintainer: Jaldhar H. Vyas <jaldhar@debian.org>
 Standards-Version: 3.9.1
 Homepage: http://search.cpan.org/dist/CGI-Application-Plugin-REST/
