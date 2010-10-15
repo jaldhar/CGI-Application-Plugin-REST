@@ -25,11 +25,11 @@ use REST::Utils qw/ media_type request_method /;
 
 =head1 VERSION
 
-This document describes CGI::Application::Plugin::REST Version 0.1
+This document describes CGI::Application::Plugin::REST Version 0.2
 
 =cut
 
-our $VERSION = '0.1';
+our $VERSION = '0.2';
 
 our @EXPORT_OK =
   qw/ rest_error_mode rest_param rest_resource rest_route rest_route_prefix /;

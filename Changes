@@ -1,5 +1,9 @@
 Revision history for CGI-Application-Plugin-REST
 
+0.2     Fri Oct 15 07:14:00 EDT 2010
+        Added a rest_resource() function to create an entire set of routes
+        in one go.
+
 0.11    Mon Oct 11 21:33:30 EDT 2010
         Added C::A::P::DevPopup to the build requirements as it is
         needed for t/devpopup.t.
