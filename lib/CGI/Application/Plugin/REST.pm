@@ -5,7 +5,47 @@ CGI::Application::Plugin::REST - Helps implement RESTful architecture in CGI app
 
 =head1 SYNOPSIS
 
-    use CGI::Application::Plugin::REST qw( :all );
+    package WidgetView;
+    use base qw( CGI::Application );
+    use CGI::Application::Plugin::REST qw( rest_route rest_param );
+
+    sub setup {
+        my ($self) = @_;
+
+        $self->rest_route({
+            '/widget'                   => {
+                'GET'    => 'showlist',
+                'POST'   => {
+                    'application/xml' => 'new_widget',
+                },
+            },
+            '/widget/:id'               => {
+                'GET'    => 'showdetail',
+            },
+        };
+    }
+
+    sub new_widget {
+        my ($self) = @_;
+
+        # make a new widget
+   }
+
+    sub showdetail {
+        my ($self) = @_;
+
+        my $id = $self->rest_param('id');
+
+        # display the widget with the id $id.
+   }
+
+    sub showlist {
+        my ($self) = @_;
+
+        # show the entire list of widgets.
+   }
+
+   1;
 
 =head1 ABSTRACT
 
@@ -59,6 +99,13 @@ called.
 
 This is done via overriding L<CGI::Application>'s C<mode_param()> function so
 it should be compatible with other L<CGI::Application> plugins.
+
+=head2 DevPopup Support
+
+If you are using L<CGI::Application::Plugin::DevPopup> (i.e. the environment
+variable C<CAP_DEVPOPUP_EXEC> is set,) C<use>'ing this module will register a
+callback which will add debug information about the current route, parameters
+etc.
 
 =head1 FUNCTIONS
 
@@ -246,7 +293,7 @@ sub _rest_dispatch {
     return rest_error_mode($self);
 }
 
-=head3 rest_error_mode()
+=head2 rest_error_mode()
 
 This function gets or sets the run mode which is called if an error occurs
 during the dispatch process.  In this run mode, you can do whatever error
@@ -258,6 +305,14 @@ Example 1:
 
     $self->rest_error_mode('my_error_mode');
     my $em = $self->rest_error_mode; # $em equals 'my_error_mode'.
+
+Why isn't the standard L<CGI::Application> error mode mechanism used? The
+problem is that at the point L<C::A::P::REST|CGI::Application::Plugin::REST>
+plugs into the dispatch process, the error mode has not been defined.  You
+might also want to use L<rest_error_mode()> in your own code to do a different
+sort of handling for errors in your REST API (which will typically only
+require setting the HTTP status code) as opposed to handling for end user
+errors.
 
 =cut
 
@@ -278,7 +333,7 @@ sub rest_error_mode {
     return $self->{'__rest_error_mode'};
 }
 
-=head3 rest_param()
+=head2 rest_param()
 
 The C<rest_param> function is used to retrieve or set named parameters
 defined by the L<rest_route()> function. it can be called in three ways.
@@ -314,7 +369,7 @@ You could also use a hashref.
 The value of a parameter need not be a scalar, it could be any any sort of
 reference even a coderef.
 
-    $self->rest_param(number => &pick_a_random_number);
+    $self->rest_param(number => \&pick_a_random_number);
 
 In this case, the function does not return anything.
 
@@ -356,7 +411,7 @@ sub rest_param {
     return;
 }
 
-=head3 rest_resource()
+=head2 rest_resource()
 
 This function will set up a complete REST API for a collection of items with all
 the CRUD (Create, Read, Update, Delete) operations in one call.  A collection
@@ -614,7 +669,7 @@ sub _make_resource_route {
     return $ret;
 }
 
-=head3 rest_route()
+=head2 rest_route()
 
 When this function is given a hash or hashref, it configures the mapping of
 routes to handlers (run modes within your L<CGI::Application>).
@@ -851,7 +906,7 @@ sub _mime_hashref {
     return;
 }
 
-=head3 rest_route_prefix()
+=head2 rest_route_prefix()
 
 Use this function to set a prefix for routes to avoid unnecessary repetition
 when you have a number of similar ones.
@@ -891,6 +946,55 @@ sub rest_route_prefix {
     return $self->{'__rest_route_prefix'};
 
 }
+
+=head1 OTHER DISPATCH PLUGINS COMPARED
+
+There are several other modules that allow L<CGI::Application> to dispatch to
+a run mode based on the C<PATH_INFO> environment variable instead of the
+traditional CGI parameter.  They each take a markedly different approach to
+implementation.  Here is a comparison.
+
+Executive summary:  L<CGI::Application::Plugin::REST> is the best :-)
+
+=head2 L<CGI::Application> Itself
+
+You can set the run mode with the C<path_info> option to C<mode_param()>.
+This is limited to one segment (i.e. between C</>'s) of the path info.
+
+Dispatch based on HTTP method or MIME media type is not supported.
+
+=head2 L<CGI::Application::Dispatch>
+
+This module has influenced most of the other dispatchers including this one.
+It replaces L<CGI::Application> as the base class for your application.
+
+It has extensive capabilities for matching path info.  It can capture variable
+segments in the URI with : ? and * tokens. They are retrievable in run
+modes as L<CGI::Application> parameters (i.e. via C<$self-E<gt>param()>.
+
+You can also dispatch by HTTP method but not by MIME media type.  The HTTP
+method is determined by looking at the C<HTTP_REQUEST_METHOD> environment
+variable only.  Methods called C<auto_rest()> and C<auto_rest_lc()> append the
+the HTTP method (all upper case and all lower case respectively) to a run mode
+that is determined by a dispatch rule which provides a limited version of
+L<C::A::P::REST|CGI::Application::Plugin::REST>'s L<rest_resource> function.
+
+=head2 L<CGI::Application::Plugin::ActionDispatch>
+
+This module adds an attribute handler to run modes of your choice which enable
+parsing of the path info with regular expressions and dispatch to the run mode
+matched. Capturing parentheses in the regex can be accessed via the
+C<action_args()> method.
+
+Dispatch based on HTTP method or MIME media type is not supported.
+
+=head2 L<CGI::Application::Plugin::Routes>
+
+This module installs a prerun hook that matches path info segments with support
+for capturing variable with the : ? and * tokens.  They are retrievable in run
+modes as L<CGI> parameters (i.e. via C<$self-E<gt>query-E<gt>param()>
+
+Dispatch based HTTP method or MIME media type is not supported.
 
 =head1 DIAGNOSTICS
 
