@@ -49,7 +49,7 @@ CGI::Application::Plugin::REST - Helps implement RESTful architecture in CGI app
 
 =head1 ABSTRACT
 
-If you use the L<CGI::Application> framework, this plugin will help you create
+If you use the L<CGI::Application|CGI::Application> framework, this plugin will help you create
 a RESTful (that's the common term for "using REST") architecture by
 abstracting out a lot of the busy work needed to make it happen.
 
@@ -84,25 +84,25 @@ Wide Web such as URIs, MIME media types, and HTTP instead of building up
 protocols and functions on top of them.
 
 This plugin contains a number of functions to support the various REST
-concepts. They try to use existing L<CGI::Application> functionality
+concepts. They try to use existing L<CGI::Application|CGI::Application> functionality
 wherever possible.
 
-C<use>'ing this plugin will intercept L<CGI::Application>'s standard dispatch
+C<use>'ing this plugin will intercept L<CGI::Application|CGI::Application>'s standard dispatch
 mechanism.  Instead of being selected based on a query parameter like C<rm>,
 the run mode will be determined by comparing URI patterns defined in your app
-with the L<rest_route()> method.  (Referred from here on, as "routes".)
+with the L<rest_route|rest_route()> method.  (Referred from here on, as "routes".)
 Optionally, specific HTTP methods or MIME media types can be defined in a
 route too.  One by one, each entry in the reverse asciibetically sorted table
 of defined routes is compared to the incoming HTTP request and the first
 successful match is selected.  The run mode mapped to that route is then
 called.
 
-This is done via overriding L<CGI::Application>'s C<mode_param()> function so
-it should be compatible with other L<CGI::Application> plugins.
+This is done via overriding L<CGI::Application|CGI::Application>'s C<mode_param()> function so
+it should be compatible with other L<CGI::Application|CGI::Application> plugins.
 
 =head2 DevPopup Support
 
-If you are using L<CGI::Application::Plugin::DevPopup> (i.e. the environment
+If you are using L<C::A::P::DevPopup|CGI::Application::Plugin::DevPopup> (i.e. the environment
 variable C<CAP_DEVPOPUP_EXEC> is set,) C<use>'ing this module will register a
 callback which will add debug information about the current route, parameters
 etc.
@@ -306,10 +306,10 @@ Example 1:
     $self->rest_error_mode('my_error_mode');
     my $em = $self->rest_error_mode; # $em equals 'my_error_mode'.
 
-Why isn't the standard L<CGI::Application> error mode mechanism used? The
+Why isn't the standard L<CGI::Application|CGI::Application> error mode mechanism used? The
 problem is that at the point L<C::A::P::REST|CGI::Application::Plugin::REST>
 plugs into the dispatch process, the error mode has not been defined.  You
-might also want to use L<rest_error_mode()> in your own code to do a different
+might also want to use L<rest_error_mode|rest_error_mode()> in your own code to do a different
 sort of handling for errors in your REST API (which will typically only
 require setting the HTTP status code) as opposed to handling for end user
 errors.
@@ -336,7 +336,7 @@ sub rest_error_mode {
 =head2 rest_param()
 
 The C<rest_param> function is used to retrieve or set named parameters
-defined by the L<rest_route()> function. it can be called in three ways.
+defined by the L<rest_route|rest_route()> function. it can be called in three ways.
 
 =over 4
 
@@ -422,7 +422,7 @@ Example 1: basic usage of rest_resource()
 
     $self->rest_resource('widget');
 
-is exactly equal to the following invocation of L<rest_route()>:
+is exactly equal to the following invocation of L<rest_route|rest_route()>:
 
     $self->rest_route(
         '/widget'                   => {
@@ -490,13 +490,13 @@ method a hash (or hashref) of parameters instead of a scalar.
 This parameter is required.  It is used to form the URI the route will match
 to.
 
-HINT: use L<rest_route_prefix> for more complicated URIs.
+HINT: use L<rest_route_prefix|rest_route_prefix()> for more complicated URIs.
 
 =item identifier
 
 This parameter sets the name assigned to the unique identifier of an item in
 the collection which is used in some generated routes.  It can be retrieved
-with L<rest_param>.  It defaults to C<id>.
+with L<rest_param|rest_param()>.  It defaults to C<id>.
 
 =item prefix
 
@@ -525,7 +525,7 @@ Example 2: advanced usage of rest_resource()
         identifier => 'num', in_types => [ 'application/xml' ],
         out_types => [ 'text/html', 'text/plain' ], );
 
-is equal to the following invocation of L<rest_route()>:
+is equal to the following invocation of L<rest_route|rest_route()>:
 
     $self->rest_route(
         '/fidget'                   => {
@@ -563,9 +563,9 @@ is equal to the following invocation of L<rest_route()>:
         },
     );
 
-If you need more complicated mappings then this, use L<rest_route()>.
+If you need more complicated mappings then this, use L<rest_route|rest_route()>.
 
-L<rest_resource()> returns the map of routes and handlers that was created.
+L<rest_resource|rest_resource()> returns the map of routes and handlers that was created.
 
 =cut
 
@@ -672,7 +672,7 @@ sub _make_resource_route {
 =head2 rest_route()
 
 When this function is given a hash or hashref, it configures the mapping of
-routes to handlers (run modes within your L<CGI::Application>).
+routes to handlers (run modes within your L<CGI::Application|CGI::Application>).
 
 It returns the map of routes and handlers.
 
@@ -707,7 +707,7 @@ If a segment of a route is prefixed with a :, it is not matched literally but
 treated as a parameter name.  The value of the parameter is whatever actually
 got matched.  If the segment ends with a ?, it is optional otherwise it is
 required.  The values of these named parameters can be retrieved with the
-L<rest_param()> method.
+L<rest_param|rest_param()> method.
 
 In example 2, http://localhost/bar/jaldhar/76/jaldhar@braincells.com would
 match.  C<rest_param('name')> would return 'jaldhar',  C<rest_param('id')>
@@ -732,7 +732,7 @@ Example 3: a wild card route
 
 If the route specification contains /*, everything from then on will be
 put into the special parameter 'dispatch_uri_remainder' which you can retrieve
-with L<rest_param()> just like any other parameter.  Only one wildcard can
+with L<rest_param|rest_param()> just like any other parameter.  Only one wildcard can
 be specified per route.  Given the request URI
 http://localhost/baz/string/good, C<rest_param('dispatch_uri_remainder')>
 would return 'good', with http://localhost/baz/string/evil it would return
@@ -794,7 +794,7 @@ while any other type of request to that URL will dispatch to C<blop()>
 
 The values of the second-level hash can also be hashes.  In this case the keys
 of the third-level hash represent MIME media types.  The values are run modes.
-The best possible match is made use C<best_match()> from L<REST::Utils>.
+The best possible match is made use C<best_match()> from L<REST::Utils|REST::Utils>.
 according to the HTTP Accept header sent in the request.  If a valid MIME
 media type cannot be matched an error is raised and the HTTP status of the
 response is set to 415.  (See L<"DIAGNOSTICS">)
@@ -949,37 +949,37 @@ sub rest_route_prefix {
 
 =head1 OTHER DISPATCH PLUGINS COMPARED
 
-There are several other modules that allow L<CGI::Application> to dispatch to
+There are several other modules that allow L<CGI::Application|CGI::Application> to dispatch to
 a run mode based on the C<PATH_INFO> environment variable instead of the
 traditional CGI parameter.  They each take a markedly different approach to
 implementation.  Here is a comparison.
 
-Executive summary:  L<CGI::Application::Plugin::REST> is the best :-)
+Executive summary:  L<C::A::P::REST|CGI::Application::Plugin::REST> is the best :-)
 
-=head2 L<CGI::Application> Itself
+=head2 L<CGI::Application|CGI::Application> Itself
 
 You can set the run mode with the C<path_info> option to C<mode_param()>.
 This is limited to one segment (i.e. between C</>'s) of the path info.
 
 Dispatch based on HTTP method or MIME media type is not supported.
 
-=head2 L<CGI::Application::Dispatch>
+=head2 L<CGI::Application::Dispatch|CGI::Application::Dispatch>
 
 This module has influenced most of the other dispatchers including this one.
-It replaces L<CGI::Application> as the base class for your application.
+It replaces L<CGI::Application|CGI::Application> as the base class for your application.
 
 It has extensive capabilities for matching path info.  It can capture variable
 segments in the URI with : ? and * tokens. They are retrievable in run
-modes as L<CGI::Application> parameters (i.e. via C<$self-E<gt>param()>.
+modes as L<CGI::Application|CGI::Application> parameters (i.e. via C<$self-E<gt>param()>.
 
 You can also dispatch by HTTP method but not by MIME media type.  The HTTP
 method is determined by looking at the C<HTTP_REQUEST_METHOD> environment
 variable only.  Methods called C<auto_rest()> and C<auto_rest_lc()> append the
 the HTTP method (all upper case and all lower case respectively) to a run mode
 that is determined by a dispatch rule which provides a limited version of
-L<C::A::P::REST|CGI::Application::Plugin::REST>'s L<rest_resource> function.
+L<C::A::P::REST|CGI::Application::Plugin::REST>'s L<rest_resource|rest_resource()> function.
 
-=head2 L<CGI::Application::Plugin::ActionDispatch>
+=head2 L<C::A::P::ActionDispatch|CGI::Application::Plugin::ActionDispatch>
 
 This module adds an attribute handler to run modes of your choice which enable
 parsing of the path info with regular expressions and dispatch to the run mode
@@ -988,26 +988,26 @@ C<action_args()> method.
 
 Dispatch based on HTTP method or MIME media type is not supported.
 
-=head2 L<CGI::Application::Plugin::Routes>
+=head2 L<C::A::P::Routes|CGI::Application::Plugin::Routes>
 
 This module installs a prerun hook that matches path info segments with support
 for capturing variable with the : ? and * tokens.  They are retrievable in run
-modes as L<CGI> parameters (i.e. via C<$self-E<gt>query-E<gt>param()>
+modes as L<CGI|CGI> parameters (i.e. via C<$self-E<gt>query-E<gt>param()>
 
-Dispatch based HTTP method or MIME media type is not supported.
+Dispatch based on HTTP method or MIME media type is not supported.
 
 =head1 DIAGNOSTICS
 
 During the dispatch process, errors can occur in certain circumstances. If an
 error occurs the appropriate HTTP status is set and execution passes to the
-run mode set by L<"rest_error_mode()">.  Here is a list of status codes and
+run mode set by L<rest_error_mode|rest_error_mode()>.  Here is a list of status codes and
 messages.
 
 =over 4
 
 =item * 400 No Dispatch Table
 
-This error can occur if L<rest_route()> was not called.
+This error can occur if L<rest_route|rest_route()> was not called.
 
 =item * 404 No Route Found
 
@@ -1015,7 +1015,7 @@ None of the specified routes matched the request URI.
 
 =item * 405 Method '$method' Not Allowed
 
-The route you specified with L<rest_route()> does not allow this HTTP
+The route you specified with L<rest_route|rest_route()> does not allow this HTTP
 request method.  An HTTP C<Allow> header is added to the response specifying
 which methods can be used.
 
@@ -1030,7 +1030,7 @@ The function that was called for this run_mode C<die>'d somewhere.
 
 =item * 501 Function Doesn't Exist
 
-The function that you wanted to call from L<rest_route()> for this run_mode
+The function that you wanted to call from L<rest_route|rest_route()> for this run_mode
 doesn't exist in your application.
 
 =back
@@ -1049,16 +1049,16 @@ your bug as I make changes.
 
 =over 4
 
-=item * L<CGI::Application>:
+=item * L<CGI::Application|CGI::Application>:
 
 The application framework this module plugs into.
 
-=item * L<REST::Utils>:
+=item * L<REST::Utils|REST::Utils>:
 
-L<CGI::Application::Plugin::REST> uses my L<REST::Utils> module behind the
+L<C::A::P::REST|CGI::Application::Plugin::REST> uses my L<REST::Utils|REST::Utils> module behind the
 scenes.
 
-=item * L<REST::Application>:
+=item * L<REST::Application|REST::Application>:
 
 This module by Matthew O'Connor gave me some good ideas.
 
@@ -1075,8 +1075,8 @@ understanding the ins and outs of REST.
 
 =head1 THANKS
 
-Much of the code in this module is based on L<CGI::Application::Plugin:Routes>
-by JuliE<aacute>n Porta who in turn credits Michael Peter's L<CGI::Application::Dispatch>.
+Much of the code in this module is based on L<C::A::P::Routes|CGI::Application::Plugin:Routes>
+by JuliE<aacute>n Porta who in turn credits Michael Peter's L<CGI::Application::Dispatch|CGI::Application::Dispatch>.
 
 =head1 AUTHOR
 
