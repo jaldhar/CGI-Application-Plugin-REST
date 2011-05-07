@@ -815,7 +815,7 @@ sub rest_route {
     my ( $self, @routes ) = @_;
 
     if ( !exists $self->{'__rest_dispatch_table'} ) {
-        $self->{'__rest_dispatch_table'} = { q{/} => 'dump_html' };
+        _method_hashref( $self, { q{/} => 'dump_html' } );
     }
 
     my $rr_m = $self->{'__rest_dispatch_table'};
