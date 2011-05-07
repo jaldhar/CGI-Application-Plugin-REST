@@ -208,15 +208,15 @@ sub _rest_dispatch {
         # and then remember which position it matches
         $rule =~ s{
                         (^ | /)                 # beginning or a /
-                        (: ([^/\?]+) (\?)?)     # stuff in between
+                        (: ([^/?]+) ([?])?)     # stuff in between
                 }{
                         push(@names, $3);
                         $1 . ( $4 ? '?( [^/]* )?' : '([^/]*)')
                 }egsmx;
 
         # '/*' onwards will become '(.*)\$'
-        if ( $rule =~ m{/\* .* $}msx ) {
-            $rule =~ s{(/\* .* )$}{/(.*)\$}msx;
+        if ( $rule =~ m{/[*] .* $}msx ) {
+            $rule =~ s{(/[*] .* )$}{/(.*)\$}msx;
             push @names, 'dispatch_uri_remainder';
         }
 
