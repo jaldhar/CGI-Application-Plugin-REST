@@ -17,3 +17,4 @@ t/lib/Test/CAPRESTPopup.pm
 t/lib/Test/CAPRESTResource.pm
 Makefile.PL
 META.yml
+META.json
