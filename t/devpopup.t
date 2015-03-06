@@ -26,7 +26,7 @@ my $expected1 = <<'EOT';
 	"<tr><td>method: </td><td colspan=\"2\">GET</td></tr>\n" + 
 	"<tr><td>mimetype: </td><td colspan=\"2\">*/*</td></tr>\n" + 
 	"<tr><td>path received: </td><td colspan=\"2\">/foo/alpha/beta/gamma/</td></tr>\n" + 
-	"<tr><td>rule matched: </td><td colspan=\"2\">/foo/([^/]*)/([^/]*)/([^/]*)/</td></tr>\n" + 
+	"<tr><td>rule matched: </td><td colspan=\"2\">/foo/:one/:two/:three/</td></tr>\n" + 
 	"<tr><td>runmode: </td><td colspan=\"2\">doop</td></tr>\n" + 
 	"<tr><td rowspan=\"3\">parameters: </td><td>one: </td><td>alpha</td></tr>\n" + 
 	"<tr><td>three: </td><td>gamma</td></tr>\n" + 

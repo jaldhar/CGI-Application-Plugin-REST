@@ -72,7 +72,8 @@ This document describes CGI::Application::Plugin::REST Version 0.2
 our $VERSION = '0.2';
 
 our @EXPORT_OK =
-  qw/ rest_error_mode rest_param rest_resource rest_route rest_route_prefix /;
+  qw/ rest_error_mode rest_param rest_resource rest_route rest_route_info
+  rest_route_prefix /;
 
 our %EXPORT_TAGS = ( 'all' => [@EXPORT_OK] );
 
@@ -104,8 +105,8 @@ it should be compatible with other L<CGI::Application|CGI::Application> plugins.
 
 If you are using L<C::A::P::DevPopup|CGI::Application::Plugin::DevPopup> (i.e. the environment
 variable C<CAP_DEVPOPUP_EXEC> is set,) C<use>'ing this module will register a
-callback which will add debug information about the current route, parameters
-etc.
+callback which will add debug information about the current route (See L<rest_route_info|rest_route_info()>),
+parameters (See L<rest_param|rest_param()>) etc.
 
 =head1 FUNCTIONS
 
@@ -197,7 +198,7 @@ sub _rest_dispatch {
         my @names = ();
 
         # $rule will be transformed later so save the original form first.
-        my $key = $rule;
+        my $origrule = $rule;
         $rule = rest_route_prefix($self) . $rule;
 
         # translate the rule into a regular expression, but remember where
@@ -224,7 +225,7 @@ sub _rest_dispatch {
         if ( my @values = ( $path =~ m{^$rule$}msx ) ) {
 
             $self->{'__match'} = $path;
-            my $table = $self->{'__rest_dispatch_table'}->{$key};
+            my $table = $self->{'__rest_dispatch_table'}->{$origrule};
 
             # next check request method.
             my $method = request_method($q);
@@ -280,7 +281,7 @@ sub _rest_dispatch {
 
             $self->{'__r_params'} = {
                 'path_received' => $path,
-                'rule_matched'  => $rule,
+                'rule_matched'  => $origrule,
                 'runmode'       => $rm_name,
                 'method'        => $method,
                 'mimetype'      => $preferred,
@@ -928,6 +929,61 @@ sub _mime_hashref {
     }
 
     return;
+}
+
+=head2 rest_route_info()
+
+This function can be called in a route handler.  It returns a reference to a
+hash which contains some information about the current route.
+
+=over 4
+
+=item path_received
+
+The value of the C<PATH_INFO> environment variable.
+
+=item rule_matched
+
+The rule that was successfully matched to determine this route.
+
+=item runmode
+
+The name of the function being called by this route.
+
+=item method
+
+The HTTP method that was matched by this route.
+
+=item mimetype
+
+The MIME media type that was matched by this route.
+
+=back
+
+Example 1:
+
+    $self->rest_route(
+         '/foo' => {
+             'GET' => 'bar',
+         },
+    );
+
+    ...
+
+    sub bar() {
+        my ($self) = @_;
+
+        my $info = $self->rest_route_info;
+
+        say $info->{method};  # prints 'GET'
+	}
+
+=cut
+
+sub rest_route_info {
+    my ( $self ) = @_;
+
+    return $self->{'__r_params'};
 }
 
 =head2 rest_route_prefix()

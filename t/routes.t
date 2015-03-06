@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );
-use Test::More tests => 26;
+use Test::More tests => 27;
 use Test::WWW::Mechanize::CGIApp;
 use lib 't/lib';
 use Test::CAPREST;
@@ -53,7 +53,7 @@ $mech->get('http://localhost/baz/string/lawful/neutral/');
 $mech->title_is('lawful/neutral/', 'route with a wildcard parameter containing / ');
 
 $mech->get('http://localhost/quux');
-$mech->title_is('7', 'rest_route return value');
+$mech->title_is('8', 'rest_route return value');
 
 $mech->post('http://localhost/quux', content_type => 'text/html');
 is($mech->status, 405, 'request method not allowed');
@@ -108,3 +108,6 @@ $mech->title_is('argle', 'rest_route_no_trailing_/');
 
 $mech->get('http://localhost/?defaultroute=1');
 $mech->title_is('bargle', 'rest_route_/');
+
+$mech->get('http://localhost/wibble/wobble');
+$mech->title_is('/wibble/wobble /wibble/* warble GET */*', 'rest_route_info');

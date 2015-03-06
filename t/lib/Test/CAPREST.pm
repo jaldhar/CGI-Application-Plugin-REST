@@ -85,6 +85,9 @@ sub setup {
             '/arf'       => {
                 'GET'                   => 'zap',
             },
+            '/wibble/*'    => {
+                'GET'                   => 'warble'
+            },
         );
     }
 
@@ -211,6 +214,18 @@ sub bargle {
     my $q = $self->query;
 
     return $q->start_html('bargle') .
+           $q->end_html;
+}
+
+sub warble {
+   my ($self) = @_;
+
+    my $info = $self->rest_route_info;
+    my $title = join ' ', ($info->{path_received}, $info->{rule_matched},
+        $info->{runmode}, $info->{method}, $info->{mimetype});
+    my $q = $self->query;
+
+    return $q->start_html($title) .
            $q->end_html;
 }
 
