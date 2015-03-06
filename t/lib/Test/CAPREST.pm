@@ -70,16 +70,20 @@ sub setup {
                 '*'      => 'blop',
             },
             '/grudnuk'                => {
-                GET      => {
+                'GET'      => {
                     'application/xml' => 'zip',
                     '*/*'             => 'zap',
                 },
-                PUT      => {
+                'POST'      => {
+                    'application/xml' => 'zoom',
+                    '*/*'             => 'zap',
+                },
+                'PUT'      => {
                     'application/xml' => 'zoom',
                 },
             },
             '/arf'       => {
-                GET                   => 'zap',
+                'GET'                   => 'zap',
             },
         );
     }

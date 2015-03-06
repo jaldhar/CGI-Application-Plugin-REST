@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );
-use Test::More tests => 25;
+use Test::More tests => 26;
 use Test::WWW::Mechanize::CGIApp;
 use lib 't/lib';
 use Test::CAPREST;
@@ -93,6 +93,9 @@ ok($EVAL_ERROR, 'invalid subroute_type');
 
 $mech->put('http://localhost/grudnuk', content => q{}, content_type => 'image/gif');
 is($mech->status, 415, 'unsupported content_type');
+
+$mech->post('http://localhost/grudnuk', content => q{}, content_type => 'image/gif');
+$mech->title_is('zap', 'unsupported content_type but default present');
 
 $mech->get('http://localhost/arf');
 $mech->title_is('zap', 'subroute is not a hashref');

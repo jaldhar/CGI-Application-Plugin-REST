@@ -246,14 +246,15 @@ sub _rest_dispatch {
             # then check MIME media type
             my @types = keys %{$table};
             my $preferred = media_type( $q, \@types );
-            if ( !defined $preferred ) {
-                $self->header_add( -status => '415 Unsupported Media Type' );
-                return rest_error_mode($self, $EVAL_ERROR);
-            }
-            if ( $preferred eq q{} ) {
+            if ( !defined $preferred || $preferred eq q{} ) {
                 $preferred = q{*/*};
             }
             my $rm_name = $table->{$preferred};
+
+            if (!defined $rm_name) {
+                $self->header_add( -status => '415 Unsupported Media Type' );
+                return rest_error_mode($self, $EVAL_ERROR);
+            }
 
             my $sub;
             if ( ref $rm_name eq 'CODE' ) {
@@ -805,7 +806,7 @@ Example 5: More complex handlers
 
 If the handler is a hashref, the keys of the second-level hash are HTTP
 methods and the values if scalars or coderefs, are run modes.  Supported
-methods are C<HEAD>, C<GET>, C<POST>, C<PUT>, C<DELETE>, and C<OPTIONS>.  The key can also be *
+methods are C<HEAD>, C<GET>, C<POST>, C<PUT>, C<DELETE>, and C<OPTIONS>.  The key can also be C<*>
 which matches all methods not explicitly specified.  If a valid method cannot
 be matched, an error is raised and the HTTP status of the response is set to
 405.  (See L<"DIAGNOSTICS">.)
@@ -821,8 +822,9 @@ The values of the second-level hash can also be hashes.  In this case the keys
 of the third-level hash represent MIME media types.  The values are run modes.
 The best possible match is made use C<best_match()> from L<REST::Utils|REST::Utils>.
 according to the HTTP Accept header sent in the request.  If a valid MIME
-media type cannot be matched an error is raised and the HTTP status of the
-response is set to 415.  (See L<"DIAGNOSTICS">)
+media type cannot be matched C<*/*> is tried as a last resort.  If there is no
+handler for even that, an error is raised and the HTTP status of the response
+is set to 415.  (See L<"DIAGNOSTICS">)
 
 In example 5, a C<GET> request to http://localhost/grudnuk with MIME
 media type application/xml will dispatch to C<zip()>. If the same request is
@@ -1040,7 +1042,7 @@ which methods can be used.
 =item * 415 Unsupported Media Type
 
 None of the MIME media types requested by the client can be returned by this
-route.
+route and there is no handler for C<*/*>.
 
 =item * 500 No Dispatch Table
 
