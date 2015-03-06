@@ -189,7 +189,7 @@ sub _rest_dispatch {
     # get the module name from the table
     if ( !exists $self->{'__rest_dispatch_table'} ) {
         $self->header_add( -status => '500 No Dispatch Table' );
-        return rest_error_mode($self, $EVAL_ERROR);
+        return rest_error_mode( $self, $EVAL_ERROR );
     }
 
     # look at each rule and stop when we get a match
@@ -241,7 +241,7 @@ sub _rest_dispatch {
                     -status => "405 Method '$method' Not Allowed",
                     -allow  => ( join q{, }, sort keys %{$table} ),
                 );
-                return rest_error_mode($self, $EVAL_ERROR);
+                return rest_error_mode( $self, $EVAL_ERROR );
             }
 
             # then check MIME media type
@@ -252,9 +252,9 @@ sub _rest_dispatch {
             }
             my $rm_name = $table->{$preferred};
 
-            if (!defined $rm_name) {
+            if ( !defined $rm_name ) {
                 $self->header_add( -status => '415 Unsupported Media Type' );
-                return rest_error_mode($self, $EVAL_ERROR);
+                return rest_error_mode( $self, $EVAL_ERROR );
             }
 
             my $sub;
@@ -265,9 +265,9 @@ sub _rest_dispatch {
                 $sub = eval { return $self->can($rm_name); };
             }
             if ( !defined $sub ) {
-                $self->header_add( -status =>
-                      "501 Function '$rm_name' Doesn't Exist" );
-                return rest_error_mode($self, $EVAL_ERROR);
+                $self->header_add(
+                    -status => "501 Function '$rm_name' Doesn't Exist" );
+                return rest_error_mode( $self, $EVAL_ERROR );
             }
 
             $self->param( 'rm', $rm_name );
@@ -292,7 +292,7 @@ sub _rest_dispatch {
     }
 
     $self->header_add( -status => '404 No Route Found' );
-    return rest_error_mode($self, $EVAL_ERROR);
+    return rest_error_mode( $self, $EVAL_ERROR );
 }
 
 =head2 rest_error_mode()
@@ -486,7 +486,7 @@ Should be used to alter the existing resource with the id C<:id>.
 
 =item *_options
 
-Should be used to retrieve metadata that describes the resource’s available
+Should be used to retrieve metadata that describes the resource's available
 interactions.
 
 =back
@@ -621,7 +621,8 @@ sub rest_resource {
         "/$resource" => {
             'GET'  => _make_resource_route( $prefix . '_index',  $out_types ),
             'POST' => _make_resource_route( $prefix . '_create', $in_types ),
-            'OPTIONS' => _make_resource_route( $prefix . '_options', $out_types ),
+            'OPTIONS' =>
+              _make_resource_route( $prefix . '_options', $out_types ),
         },
         "/$resource/:$id" => {
             'DELETE' => _make_resource_route( $prefix . '_destroy', [q{*/*}] ),
@@ -887,8 +888,8 @@ sub _method_hashref {
               ') has an invalid route definition';
         }
 
-        my @request_methods = ( 'GET', 'POST', 'PUT', 'DELETE', 'HEAD',
-            'OPTIONS', q{*} );
+        my @request_methods =
+          ( 'GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', q{*}, );
         foreach my $req (@methods) {
             if ( scalar grep { $_ eq $req } @request_methods ) {
                 my $subroute = $routes->{$rule}->{$req};
@@ -981,7 +982,7 @@ Example 1:
 =cut
 
 sub rest_route_info {
-    my ( $self ) = @_;
+    my ($self) = @_;
 
     return $self->{'__r_params'};
 }

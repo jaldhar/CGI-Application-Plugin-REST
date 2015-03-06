@@ -5,5 +5,3 @@ severity = brutal
 [-Documentation::RequirePodSections]
 
 [-Documentation::PodSpelling]
-
-[-Miscellanea::RequireRcsKeywords]
