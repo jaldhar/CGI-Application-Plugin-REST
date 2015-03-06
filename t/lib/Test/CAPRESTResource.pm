@@ -139,6 +139,15 @@ sub widget_update {
            $q->end_html;
 }
 
+sub widget_options {
+    my ($self) = @_;
+
+    my $q = $self->query;
+
+    return $q->start_html('widget options ') .
+           $q->end_html;
+}
+
 sub foo_create {
     my ($self) = @_;
 

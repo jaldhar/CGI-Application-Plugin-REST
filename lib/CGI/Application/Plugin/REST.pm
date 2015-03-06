@@ -426,8 +426,9 @@ is exactly equal to the following invocation of L<rest_route|rest_route()>:
 
     $self->rest_route(
         '/widget'                   => {
-            'GET'    => 'widget_index',
-            'POST'   => 'widget_create',
+            'GET'     => 'widget_index',
+            'POST'    => 'widget_create',
+            'OPTIONS' => 'widget_options',
         },
         '/widget/:id'               => {
             'DELETE' => 'widget_destroy',
@@ -478,6 +479,11 @@ Should be used to display resource with the id C<:id>.
 
 Should be used to alter the existing resource with the id C<:id>.
 
+=item *_options
+
+Should be used to retrieve metadata that describes the resource’s available
+interactions.
+
 =back
 
 Various aspects of the generated routes can be customized by passing this
@@ -507,9 +513,9 @@ to C<resource>.
 
 Both these parameters represent arrayrefs of MIME media types.  C<in_type>
 defines acceptable MIME media types for data incoming to your API (i.e.
-C<POST>S and C<PUT>s) and C<out_type> does the same for outgoing data (i.e.
-C<GET>s.) C<DELETE> requests do not need MIME media types so they are not
-covered.
+C<POST>s and C<PUT>s) and C<out_type> does the same for outgoing data (i.e.
+C<GET>s and C<OPTIONS>.) C<DELETE> requests do not need MIME media types so
+they are not covered.
 
 The reason there are two separate parameters is that typically the number of
 data formats a REST API will serve is different to the number and kind of
@@ -610,6 +616,7 @@ sub rest_resource {
         "/$resource" => {
             'GET'  => _make_resource_route( $prefix . '_index',  $out_types ),
             'POST' => _make_resource_route( $prefix . '_create', $in_types ),
+            'OPTIONS' => _make_resource_route( $prefix . '_options', $out_types ),
         },
         "/$resource/:$id" => {
             'DELETE' => _make_resource_route( $prefix . '_destroy', [q{*/*}] ),
@@ -794,14 +801,15 @@ Example 5: More complex handlers
     );
 
 If the handler is a hashref, the keys of the second-level hash are HTTP
-methods and the values if scalars or coderefs, are run modes.  The key
-can also be * which matches all methods not explicitly specified.  If a valid
-method cannot be matched, an error is raised and the HTTP status of the
-response is set to 405.  (See L<"DIAGNOSTICS">)
+methods and the values if scalars or coderefs, are run modes.  Supported
+methods are C<HEAD>, C<GET>, C<POST>, C<PUT>, C<DELETE>, and C<OPTIONS>.  The key can also be *
+which matches all methods not explicitly specified.  If a valid method cannot
+be matched, an error is raised and the HTTP status of the response is set to
+405.  (See L<"DIAGNOSTICS">.)
 
 In example 5, a C<GET> request to http://localhost/quux will be dispatched to
 C<ptang()>.  A C<DELETE> to http://localhost/quux will dispatch to C<krrang()>.
-A C<POST>, C<PUT> or C<HEAD> will cause an error.
+An C<OPTIONS>) C<POST>, C<PUT> or C<HEAD> will cause an error.
 
 A C<POST> request to http://localhost/edna will dispatch to C<zip()>
 while any other type of request to that URL will dispatch to C<blop()>
@@ -873,7 +881,8 @@ sub _method_hashref {
               ') has an invalid route definition';
         }
 
-        my @request_methods = ( 'GET', 'POST', 'PUT', 'DELETE', 'HEAD', q{*} );
+        my @request_methods = ( 'GET', 'POST', 'PUT', 'DELETE', 'HEAD',
+            'OPTIONS', q{*} );
         foreach my $req (@methods) {
             if ( scalar grep { $_ eq $req } @request_methods ) {
                 my $subroute = $routes->{$rule}->{$req};

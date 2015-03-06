@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );
-use Test::More tests => 20;
+use Test::More tests => 21;
 use Test::WWW::Mechanize::CGIApp;
 use lib 't/lib';
 use Test::CAPRESTResource;
@@ -66,6 +66,9 @@ $mech->title_is('widget show 3', 'widget_show');
 
 $mech->put('http://localhost/widget/4', content_type => 'text/html');
 $mech->title_is('widget update 4', 'widget_update');
+
+$mech->post('http://localhost/widget?_method=OPTIONS');
+$mech->title_is('widget options', 'widget_options');
 
 $mech->post('http://localhost/fidget', content_type => 'application/xml');
 $mech->title_is('foo create', 'foo_create');
