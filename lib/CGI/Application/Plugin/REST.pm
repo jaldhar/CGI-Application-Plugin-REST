@@ -264,7 +264,7 @@ sub _rest_dispatch {
             }
             if ( !defined $sub ) {
                 $self->header_add( -status =>
-                      "501 Method '$method' Not Implemented by $rm_name" );
+                      "501 Function '$rm_name' Doesn't Exist" );
                 return rest_error_mode($self, $EVAL_ERROR);
             }
 
@@ -1050,7 +1050,7 @@ This error can occur if L<rest_route|rest_route()> was not called.
 
 The function that was called for this run_mode C<die>'d somewhere.
 
-=item * 501 Function Doesn't Exist
+=item * 501 Function '$function_name' Doesn't Exist
 
 The function that you wanted to call from L<rest_route|rest_route()> for this run_mode
 doesn't exist in your application.
