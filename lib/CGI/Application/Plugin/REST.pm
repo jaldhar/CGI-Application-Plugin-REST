@@ -697,9 +697,23 @@ A segment in a route is matched literally.  So if a request URI matches
 http://localhost/foo, the run mode that handles the route in example 1 will
 be used.
 
+If you want to match the URI base itself, you can do it like this:
+
+Example 2: route to a URI base
+
+    /
+
+This matches C<http://localhost/>.  Some people don't like the trailing slash;
+they can be accomodated by using an empty string as the route as in Example 3.
+
+Example 3: route to a URI base without the trailing /
+    ''
+
+This matches C<http://localhost>.
+
 Routes can have more complex specifications.
 
-Example 2: a more complex route
+Example 4: a more complex route
 
     /bar/:name/:id?/:email
 
@@ -726,7 +740,7 @@ parameter ':email' is missing.
 Note: Each named parameter is returned as a scalar.  If you want ':email' to
 actually be an email address, it is up to your code to validate it before use.
 
-Example 3: a wild card route
+Example 5: a wild card route
 
     /baz/string/*
 
@@ -813,10 +827,6 @@ response is set to 404 (See L<"DIAGNOSTICS">.)
 
 sub rest_route {
     my ( $self, @routes ) = @_;
-
-    if ( !exists $self->{'__rest_dispatch_table'} ) {
-        _method_hashref( $self, { q{/} => 'dump_html' } );
-    }
 
     my $rr_m = $self->{'__rest_dispatch_table'};
 

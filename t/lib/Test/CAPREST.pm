@@ -41,6 +41,16 @@ sub setup {
         );
         $self->rest_route_prefix('/app');
     }
+    elsif (defined $self->query->param('defaultroute')) {
+        $self->rest_route(
+            q{} => {
+                'GET' => 'argle',
+            },
+            '/' => {
+                'GET' => 'bargle',
+            },
+        );
+    }
     elsif (!defined $self->query->param('nodispatch')) {
         # Remember to change rest_route_return_value test in t/routes.t
         # when you change number of routes here. (add 1 for default '/'.)
@@ -179,6 +189,24 @@ sub zoom {
     my $q = $self->query;
 
     return $q->start_html('zoom') .
+           $q->end_html;
+}
+
+sub argle {
+   my ($self) = @_;
+
+    my $q = $self->query;
+
+    return $q->start_html('argle') .
+           $q->end_html;
+}
+
+sub bargle {
+   my ($self) = @_;
+
+    my $q = $self->query;
+
+    return $q->start_html('bargle') .
            $q->end_html;
 }
 

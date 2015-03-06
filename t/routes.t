@@ -4,7 +4,7 @@
 use strict;
 use warnings;
 use English qw( -no_match_vars );
-use Test::More tests => 23;
+use Test::More tests => 25;
 use Test::WWW::Mechanize::CGIApp;
 use lib 't/lib';
 use Test::CAPREST;
@@ -53,7 +53,7 @@ $mech->get('http://localhost/baz/string/lawful/neutral/');
 $mech->title_is('lawful/neutral/', 'route with a wildcard parameter containing / ');
 
 $mech->get('http://localhost/quux');
-$mech->title_is('8', 'rest_route return value');
+$mech->title_is('7', 'rest_route return value');
 
 $mech->post('http://localhost/quux', content_type => 'text/html');
 is($mech->status, 405, 'request method not allowed');
@@ -99,3 +99,9 @@ $mech->title_is('zap', 'subroute is not a hashref');
 
 $mech->get('http://localhost/app/zing?routeprefix=1');
 $mech->title_is('zap', 'rest_route_prefix');
+
+$mech->get('http://localhost?defaultroute=1');
+$mech->title_is('argle', 'rest_route_no_trailing_/');
+
+$mech->get('http://localhost/?defaultroute=1');
+$mech->title_is('bargle', 'rest_route_/');
