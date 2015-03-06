@@ -187,7 +187,7 @@ sub _rest_dispatch {
 
     # get the module name from the table
     if ( !exists $self->{'__rest_dispatch_table'} ) {
-        $self->header_add( -status => '400 No Dispatch Table' );
+        $self->header_add( -status => '500 No Dispatch Table' );
         return rest_error_mode($self);
     }
 
@@ -1005,10 +1005,6 @@ messages.
 
 =over 4
 
-=item * 400 No Dispatch Table
-
-This error can occur if L<rest_route|rest_route()> was not called.
-
 =item * 404 No Route Found
 
 None of the specified routes matched the request URI.
@@ -1023,6 +1019,10 @@ which methods can be used.
 
 None of the MIME media types requested by the client can be returned by this
 route.
+
+=item * 500 No Dispatch Table
+
+This error can occur if L<rest_route|rest_route()> was not called.
 
 =item * 500 Application Error
 
