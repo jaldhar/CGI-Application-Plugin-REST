@@ -188,7 +188,7 @@ sub _rest_dispatch {
     # get the module name from the table
     if ( !exists $self->{'__rest_dispatch_table'} ) {
         $self->header_add( -status => '500 No Dispatch Table' );
-        return rest_error_mode($self);
+        return rest_error_mode($self, $EVAL_ERROR);
     }
 
     # look at each rule and stop when we get a match
@@ -240,7 +240,7 @@ sub _rest_dispatch {
                     -status => "405 Method '$method' Not Allowed",
                     -allow  => ( join q{, }, sort keys %{$table} ),
                 );
-                return rest_error_mode($self);
+                return rest_error_mode($self, $EVAL_ERROR);
             }
 
             # then check MIME media type
@@ -248,7 +248,7 @@ sub _rest_dispatch {
             my $preferred = media_type( $q, \@types );
             if ( !defined $preferred ) {
                 $self->header_add( -status => '415 Unsupported Media Type' );
-                return rest_error_mode($self);
+                return rest_error_mode($self, $EVAL_ERROR);
             }
             if ( $preferred eq q{} ) {
                 $preferred = q{*/*};
@@ -265,7 +265,7 @@ sub _rest_dispatch {
             if ( !defined $sub ) {
                 $self->header_add( -status =>
                       "501 Method '$method' Not Implemented by $rm_name" );
-                return rest_error_mode($self);
+                return rest_error_mode($self, $EVAL_ERROR);
             }
 
             $self->param( 'rm', $rm_name );
@@ -290,7 +290,7 @@ sub _rest_dispatch {
     }
 
     $self->header_add( -status => '404 No Route Found' );
-    return rest_error_mode($self);
+    return rest_error_mode($self, $EVAL_ERROR);
 }
 
 =head2 rest_error_mode()
@@ -313,6 +313,9 @@ might also want to use L<rest_error_mode|rest_error_mode()> in your own code to 
 sort of handling for errors in your REST API (which will typically only
 require setting the HTTP status code) as opposed to handling for end user
 errors.
+
+Your rest_error_mode handler function will receive as a parameter the value of C<$@>
+if any.
 
 =cut
 
