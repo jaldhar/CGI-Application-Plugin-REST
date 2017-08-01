@@ -22,7 +22,7 @@ CGI::Application::Plugin::REST - Helps implement RESTful architecture in CGI app
             '/widget/:id'               => {
                 'GET'    => 'showdetail',
             },
-        };
+        });
     }
 
     sub new_widget {
